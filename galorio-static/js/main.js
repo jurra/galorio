@@ -3,6 +3,9 @@
  * Initializes the gallery and handles global functionality
  */
 
+import { MetadataProcessor } from './metadata.js';
+import { Gallery } from './gallery.js';
+
 // Global variables
 let metadataProcessor;
 let gallery;

@@ -3,6 +3,8 @@
  * Handles individual artwork display, interactions, and contact forms
  */
 
+import { MetadataProcessor } from './metadata.js';
+
 // Global variables
 let currentArtwork = null;
 let metadataProcessor = null;

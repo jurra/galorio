@@ -3,7 +3,7 @@
  * Handles the gallery display, filtering, and interactions
  */
 
-class Gallery {
+export class Gallery {
     constructor(containerId, metadataProcessor) {
         this.container = document.getElementById(containerId);
         this.metadata = metadataProcessor;
@@ -983,6 +983,3 @@ class Gallery {
         window.location.href = detailUrl;
     }
 }
-
-// Export for use in other modules
-window.Gallery = Gallery;

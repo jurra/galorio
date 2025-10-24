@@ -3,7 +3,7 @@
  * Handles loading and processing of artwork metadata from JSON files and CSV configurations
  */
 
-class MetadataProcessor {
+export class MetadataProcessor {
     constructor() {
         this.artworks = [];
         this.collections = new Map();
@@ -540,6 +540,3 @@ class MetadataProcessor {
         });
     }
 }
-
-// Export for use in other modules
-window.MetadataProcessor = MetadataProcessor;

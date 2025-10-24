@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "python3 -m http.server 8080",
-    "preview": "python3 -m http.server 8080",
-    "build": "node scripts/build.js"
+    "preview": "python3 -m http.server 8080 --directory dist",
+    "build": "rollup -c",
+    "build:metadata": "node scripts/build.js"
   },
   "keywords": [
     "art",
@@ -19,6 +20,12 @@
   "author": "Artist Portfolio",
   "license": "MIT",
   "devDependencies": {
-    "csvtojson": "^2.0.10"
+    "csvtojson": "^2.0.10",
+    "rollup": "^4.9.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-postcss": "^4.0.2"
   }
 }
