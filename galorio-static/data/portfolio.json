@@ -1,0 +1,141 @@
+{
+  "artworks": [
+    {
+      "id": "abstract-form",
+      "title": "Abstract Symphony",
+      "collection": "Sample Works",
+      "pricing": "$950",
+      "dimensions": "76.2*50.8",
+      "size": "small",
+      "notes": "\"Demo piece\"",
+      "description": "\"A sample abstract work demonstrating the portfolio system.\"",
+      "filename": "abstract-form.jpg",
+      "imageUrl": "./artworks/abstract-form.jpg",
+      "available": true,
+      "price": "$950",
+      "featured": false,
+      "tags": [
+        "abstract",
+        "symphony"
+      ]
+    },
+    {
+      "id": "feather-canyons",
+      "title": "Canyon Vista",
+      "collection": "Sample Works",
+      "pricing": "$800",
+      "dimensions": "61*76",
+      "size": "medium",
+      "notes": "\"Natural forms\"",
+      "description": "\"Sample landscape piece showing natural formations.\"",
+      "filename": "feather-canyons.jpg",
+      "imageUrl": "./artworks/feather-canyons.jpg",
+      "available": true,
+      "price": "$800",
+      "featured": false,
+      "tags": [
+        "canyon",
+        "vista"
+      ]
+    },
+    {
+      "id": "ABS-0012",
+      "title": "Cosmic Awakening",
+      "collection": "Spiritual Abstracts",
+      "pricing": "$1800",
+      "dimensions": "71.1*101.6",
+      "size": "medium",
+      "notes": "\"Featured spiritual piece\"",
+      "description": "\"A powerful exploration of cosmic consciousness and spiritual awakening. This piece channels deep universal energies through bold abstract forms and luminous color combinations.\"",
+      "filename": "ABS-0012.jpg",
+      "imageUrl": "./artworks/ABS-0012.jpg",
+      "available": true,
+      "price": "$1800",
+      "featured": true,
+      "tags": [
+        "cosmic",
+        "awakening",
+        "spiritual",
+        "power"
+      ]
+    },
+    {
+      "id": "ABS-0014",
+      "title": "Divine Radiance",
+      "collection": "Spiritual Abstracts",
+      "pricing": "$1650",
+      "dimensions": "76.2*101.6",
+      "size": "medium",
+      "notes": "\"Sacred geometry influence\"",
+      "description": "\"Inspired by sacred geometry and divine light",
+      "filename": "ABS-0014.jpg",
+      "imageUrl": "./artworks/ABS-0014.jpg",
+      "available": true,
+      "price": "$1650",
+      "featured": true,
+      "tags": [
+        "divine",
+        "radiance"
+      ]
+    },
+    {
+      "id": "ABS-0013",
+      "title": "Ethereal Transformation",
+      "collection": "Spiritual Abstracts",
+      "pricing": "$2200",
+      "dimensions": "91.4*121.9",
+      "size": "large",
+      "notes": "\"Major transformation work\"",
+      "description": "\"This artwork represents the profound journey of personal transformation and spiritual evolution. The flowing forms and vibrant energy speak to the soul's journey toward enlightenment.\"",
+      "filename": "ABS-0013.jpg",
+      "imageUrl": "./artworks/ABS-0013.jpg",
+      "available": true,
+      "price": "$2200",
+      "featured": false,
+      "tags": [
+        "ethereal",
+        "transformation",
+        "spiritual",
+        "energy"
+      ]
+    },
+    {
+      "id": "coastal-breeze",
+      "title": "Ocean Dreams",
+      "collection": "Sample Works",
+      "pricing": "$750",
+      "dimensions": "61*91",
+      "size": "medium",
+      "notes": "\"Coastal inspiration\"",
+      "description": "\"Sample coastal artwork for portfolio demonstration.\"",
+      "filename": "coastal-breeze.jpg",
+      "imageUrl": "./artworks/coastal-breeze.jpg",
+      "available": true,
+      "price": "$750",
+      "featured": false,
+      "tags": [
+        "ocean",
+        "dreams"
+      ]
+    }
+  ],
+  "collections": {
+    "Sample Works": [
+      "abstract-form",
+      "feather-canyons",
+      "coastal-breeze"
+    ],
+    "Spiritual Abstracts": [
+      "ABS-0012",
+      "ABS-0014",
+      "ABS-0013"
+    ]
+  },
+  "meta": {
+    "generatedAt": "2025-10-24T17:31:37.521Z",
+    "totalArtworks": 6,
+    "collectionsCount": 2,
+    "featuredCount": 2,
+    "missingImages": 0
+  }
+}

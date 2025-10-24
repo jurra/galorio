@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Artwork Details | Art Portfolio</title>
+    <meta name="description" content="Detailed view of artwork with purchase and inquiry options.">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/artwork.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    
+    <!-- Open Graph meta tags -->
+    <meta property="og:title" content="" id="og-title">
+    <meta property="og:description" content="" id="og-description">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="" id="og-url">
+    <meta property="og:image" content="" id="og-image">
+    
+    <!-- Schema.org structured data for artwork -->
+    <script type="application/ld+json" id="artwork-schema">
+    </script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="nav-brand">
+                    <a href="./index.html">
+                        <h1>Discovery</h1>
+                    </a>
+                </div>
+                
+                <div class="nav-controls">
+                    <a href="./index.html" class="back-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m15 18-6-6 6-6"/>
+                        </svg>
+                        Back to Gallery
+                    </a>
+                    
+                    <div class="user-avatar">
+                        <img src="./artworks/profile.jpg" alt="Artist Profile" onerror="this.style.display='none'">
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Loading State -->
+            <div id="loading-state" class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading artwork details...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="error-state" style="display: none;">
+                <h2>Artwork Not Found</h2>
+                <p>The requested artwork could not be found.</p>
+                <a href="./index.html" class="btn btn-primary">Return to Gallery</a>
+            </div>
+
+            <!-- Artwork Detail Content -->
+            <article id="artwork-content" class="artwork-detail" style="display: none;">
+                <!-- Breadcrumb Navigation -->
+                <nav class="breadcrumb" aria-label="Breadcrumb">
+                    <ol>
+                        <li><a href="./index.html">Portfolio</a></li>
+                        <li><span id="breadcrumb-collection">Collection</span></li>
+                        <li><span id="breadcrumb-title" aria-current="page">Artwork</span></li>
+                    </ol>
+                </nav>
+
+                <!-- Main Artwork Section -->
+                <section class="artwork-main">
+                    <div class="artwork-image-section">
+                        <div class="artwork-image-container">
+                            <img id="artwork-image" src="" alt="" class="artwork-image">
+                            <button id="fullscreen-btn" class="fullscreen-btn" title="View fullscreen">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Image Navigation -->
+                        <div id="image-nav" class="image-navigation" style="display: none;">
+                            <button id="prev-image" class="nav-btn prev" title="Previous image">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="m15 18-6-6 6-6"/>
+                                </svg>
+                            </button>
+                            <button id="next-image" class="nav-btn next" title="Next image">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="m9 18 6-6-6-6"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="artwork-info-section">
+                        <header class="artwork-header">
+                            <h1 id="artwork-title" class="artwork-title"></h1>
+                            <p id="artwork-artist" class="artwork-artist">Tamara Grand</p>
+                        </header>
+
+                        <div class="artwork-details-grid">
+                            <div class="detail-item">
+                                <label>Medium</label>
+                                <span id="artwork-medium">-</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <label>Dimensions</label>
+                                <span id="artwork-dimensions">-</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <label>Year</label>
+                                <span id="artwork-year">-</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <label>Collection</label>
+                                <span id="artwork-collection">-</span>
+                            </div>
+                        </div>
+
+                        <div class="artwork-description">
+                            <p id="artwork-description-text">Loading description...</p>
+                        </div>
+
+                        <div class="pricing-section">
+                            <div class="price-info">
+                                <span id="artwork-price" class="price">-</span>
+                                <span id="availability-status" class="availability-status">-</span>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button id="inquire-btn" class="btn btn-outline">INQUIRE</button>
+                            <button id="purchase-btn" class="btn btn-primary">PURCHASE</button>
+                            <button id="share-btn" class="btn btn-secondary">SHARE</button>
+                        </div>
+
+                        <!-- Tags -->
+                        <div id="artwork-tags" class="artwork-tags" style="display: none;">
+                            <!-- Tags will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Related Artworks -->
+                <section id="related-section" class="related-artworks" style="display: none;">
+                    <h2>More from this Collection</h2>
+                    <div id="related-grid" class="related-grid">
+                        <!-- Related artworks will be populated by JavaScript -->
+                    </div>
+                </section>
+            </article>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2024 Tamara Grand. All rights reserved.</p>
+                <p>Created with Art Portfolio Static</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Fullscreen Modal -->
+    <div id="fullscreen-modal" class="fullscreen-modal">
+        <button id="close-fullscreen" class="close-fullscreen">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <img id="fullscreen-image" src="" alt="" class="fullscreen-image">
+    </div>
+
+    <!-- Contact Modal -->
+    <div id="contact-modal" class="contact-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Inquire About Artwork</h3>
+                <button id="close-modal" class="close-modal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="contact-form" class="contact-form">
+                <div class="form-group">
+                    <label for="contact-name">Name *</label>
+                    <input type="text" id="contact-name" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact-email">Email *</label>
+                    <input type="email" id="contact-email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact-phone">Phone</label>
+                    <input type="tel" id="contact-phone" name="phone">
+                </div>
+                
+                <div class="form-group">
+                    <label for="inquiry-type">Inquiry Type</label>
+                    <select id="inquiry-type" name="inquiryType">
+                        <option value="purchase">Purchase Inquiry</option>
+                        <option value="commission">Commission Request</option>
+                        <option value="exhibition">Exhibition Interest</option>
+                        <option value="general">General Question</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact-message">Message *</label>
+                    <textarea id="contact-message" name="message" rows="4" required placeholder="I'm interested in this artwork..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" id="cancel-contact" class="btn btn-outline">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Inquiry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="./js/metadata.js"></script>
+    <script src="./js/artwork-detail.js"></script>
+</body>
+</html>

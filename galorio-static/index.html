@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Art Portfolio | Tamara Grand</title>
+    <meta name="description" content="Discover the colorful, expressive artwork of Tamara Grand">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="./css/main.css" as="style">
+    <link rel="preload" href="./css/collections.css" as="style">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/collections.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    
+    <!-- Open Graph meta tags for social sharing -->
+    <meta property="og:title" content="Art Portfolio | Tamara Grand">
+    <meta property="og:description" content="Discover the colorful, expressive artwork of Tamara Grand">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="">
+    <meta property="og:image" content="">
+    
+    <!-- Twitter Card meta tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Art Portfolio | Tamara Grand">
+    <meta name="twitter:description" content="Discover the colorful, expressive artwork of Tamara Grand">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="nav-brand">
+                    <h1>Gallery</h1>
+                </div>
+                
+                <div class="nav-controls">
+                    <div class="search-container">
+                        <input 
+                            type="text" 
+                            id="search-input" 
+                            placeholder="Search artwork" 
+                            class="search-input"
+                            aria-label="Search artworks"
+                        >
+                        <button class="search-btn" aria-label="Search">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="user-avatar">
+                        <img src="./artworks/profile.jpg" alt="Artist Profile" onerror="this.style.display='none'">
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Artist Info Section -->
+            <section class="artist-info">
+                <div class="artist-profile">
+                    <img src="./artworks/profile.jpg" alt="Tamara Grand" onerror="this.style.display='none'">
+                    <div class="artist-details">
+                        <h1 class="artist-name">Tamara Grand</h1>
+                        <p class="artist-tagline">Colorful, expressive artwork inspired by coastal BC</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Collection Filters -->
+            <section class="filters-section">
+                <div id="collection-filters" class="collection-filters" role="tablist">
+                    <!-- Filters will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Gallery Section -->
+            <section class="gallery-section">
+                <div id="gallery-container" class="gallery-container">
+                    <!-- Loading state -->
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>Loading artwork...</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2024 Tamara Grand. All rights reserved.</p>
+                <p>Created with Art Portfolio Static</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="./js/metadata.js"></script>
+    <script src="./js/gallery.js"></script>
+    <script src="./js/main.js"></script>
+</body>
+</html>

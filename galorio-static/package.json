@@ -1,0 +1,24 @@
+{
+  "name": "art-portfolio-static",
+  "version": "1.0.0",
+  "description": "A customizable static art portfolio that auto-populates from image metadata",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "python3 -m http.server 8080",
+    "preview": "python3 -m http.server 8080",
+    "build": "node scripts/build.js"
+  },
+  "keywords": [
+    "art",
+    "portfolio",
+    "static",
+    "gallery",
+    "photography"
+  ],
+  "author": "Artist Portfolio",
+  "license": "MIT",
+  "devDependencies": {
+    "csvtojson": "^2.0.10"
+  }
+}
