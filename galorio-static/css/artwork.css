@@ -48,6 +48,59 @@
     color: #0056b3;
 }
 
+/* Loading and Error States */
+.loading-state, .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 200px);
+    text-align: center;
+    font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f0f0f0;
+    border-top: 3px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-state p, .error-state p {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.error-content h2 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 1rem;
+    font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.return-btn {
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    transition: background-color 0.3s ease;
+}
+
+.return-btn:hover {
+    background: #0056b3;
+}
+
 /* Back Link in Navigation */
 .back-link {
     display: flex;
@@ -66,31 +119,43 @@
 /* Main Artwork Section */
 .artwork-main {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
+    grid-template-columns: 1fr 400px;
+    gap: 2rem;
     align-items: start;
-    margin-bottom: 4rem;
+    margin-bottom: 2rem;
+    min-height: calc(100vh - 120px); /* Adjust based on header height */
 }
 
 /* Image Section */
 .artwork-image-section {
     position: relative;
+    height: calc(100vh - 140px); /* Full viewport height minus header and padding */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .artwork-image-container {
     position: relative;
-    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
     background: #f8f9fa;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .artwork-image {
-    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
     height: auto;
     display: block;
     transition: transform 0.3s ease;
+    object-fit: contain;
 }
 
 .artwork-image:hover {
@@ -582,6 +647,21 @@
         font-size: 1.75rem;
     }
     
+    .artwork-main {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        min-height: auto;
+    }
+    
+    .artwork-image-section {
+        height: 60vh;
+        order: 1;
+    }
+    
+    .artwork-details-section {
+        order: 2;
+    }
+    
     .breadcrumb {
         margin-bottom: 1rem;
     }
@@ -598,6 +678,14 @@
 @media (max-width: 480px) {
     .container {
         padding: 0 12px;
+    }
+    
+    .artwork-main {
+        gap: 1rem;
+    }
+    
+    .artwork-image-section {
+        height: 50vh;
     }
     
     .artwork-title {

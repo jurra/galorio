@@ -26,13 +26,15 @@
 </head>
 <body>
     <!-- Header -->
+        <!-- Header -->
     <header class="header">
         <div class="container">
             <nav class="nav">
-                <div class="nav-brand">
-                    <a href="./index.html">
-                        <h1>Discovery</h1>
-                    </a>
+                <div class="nav-menu">
+                    <a href="./index.html" class="nav-item">Home</a>
+                    <a href="./index.html#collections" class="nav-item">Collections</a>
+                    <a href="./index.html#about" class="nav-item">About</a>
+                    <a href="./index.html#contact" class="nav-item">Contact</a>
                 </div>
                 
                 <div class="nav-controls">
@@ -42,14 +44,28 @@
                         </svg>
                         Back to Gallery
                     </a>
-                    
-                    <div class="user-avatar">
-                        <img src="./artworks/profile.jpg" alt="Artist Profile" onerror="this.style.display='none'">
-                    </div>
                 </div>
             </nav>
         </div>
     </header>
+
+    <!-- Hero Section for Artwork Page -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-image">
+                    <img src="./artworks/profile.jpg" alt="Artist Portrait" class="artist-portrait">
+                </div>
+                <div class="hero-text">
+                    <h1 class="hero-title">✨ Artwork Details</h1>
+                    <p class="hero-description">
+                        Explore the details and story behind this unique piece. Each artwork 
+                        represents a moment of inspiration and creative expression.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Main Content -->
     <main class="main">
@@ -57,14 +73,16 @@
             <!-- Loading State -->
             <div id="loading-state" class="loading-state">
                 <div class="loading-spinner"></div>
-                <p>Loading artwork details...</p>
+                <p>Loading artwork...</p>
             </div>
 
             <!-- Error State -->
             <div id="error-state" class="error-state" style="display: none;">
-                <h2>Artwork Not Found</h2>
-                <p>The requested artwork could not be found.</p>
-                <a href="./index.html" class="btn btn-primary">Return to Gallery</a>
+                <div class="error-content">
+                    <h2>Unable to Load Artwork</h2>
+                    <p>The artwork you're looking for couldn't be loaded. Please check the link or try again.</p>
+                    <a href="./index.html" class="return-btn">Return to Gallery</a>
+                </div>
             </div>
 
             <!-- Artwork Detail Content -->
@@ -242,7 +260,6 @@
     </div>
 
     <!-- Scripts -->
-    <script src="./js/metadata.js"></script>
-    <script src="./js/artwork-detail.js"></script>
+    <script type="module" src="./js/artwork-detail.js"></script>
 </body>
 </html>

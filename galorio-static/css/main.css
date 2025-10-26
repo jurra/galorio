@@ -67,35 +67,169 @@ a:hover {
 
 /* Header */
 .header {
-    background: #2c2c2c;
-    color: white;
-    padding: 1rem 0;
+    background: #2a2a2a;
+    padding: 2rem 0;
     position: sticky;
     top: 0;
     z-index: 100;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* Navigation */
 .nav {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
 }
 
-.nav-brand h1 {
-    color: white;
-    font-size: 1.5rem;
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.nav-item {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1rem;
     font-weight: 400;
-    margin: 0;
+    letter-spacing: 0.5px;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    text-transform: capitalize;
+}
+
+.nav-item:not(:last-child)::after {
+    content: '|';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.3);
+    font-weight: 300;
+}
+
+.nav-item:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-item.active {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Hero Section - Now with its own dark background */
+.hero-section {
+    background: #2a2a2a;
+    padding: 3rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 4rem;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.hero-image {
+    position: relative;
+}
+
+.artist-portrait {
+    width: 100%;
+    height: 350px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.artist-portrait:hover {
+    transform: scale(1.02);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.hero-text {
+    color: white;
+}
+
+.hero-title {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 2.5rem;
+    font-weight: 500;
+    color: white;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    letter-spacing: 0.5px;
+}
+
+.hero-description {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 2rem;
+    letter-spacing: 0.3px;
+}
+
+.hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    letter-spacing: 0.3px;
+}
+
+.hero-cta:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateX(3px);
 }
 
 .nav-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
-/* Search */
+/* Typography - Apply artistic font family globally */
+/* Typography - Apply artistic font family globally */
+body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    line-height: 1.6;
+    color: #333;
+    background: #fafafa;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+}
+
+p, span, div {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    letter-spacing: 0.2px;
+}
+
 .search-container {
     position: relative;
     display: flex;
@@ -405,23 +539,61 @@ a:hover {
     
     .nav-controls {
         gap: 0.5rem;
+        position: static;
+        transform: none;
     }
     
-    .search-container.mobile-hidden {
+    .nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0;
+    }
+    
+    .nav-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .nav-item:not(:last-child)::after {
         display: none;
     }
     
-    .search-toggle {
-        background: none;
-        border: none;
-        color: white;
-        cursor: pointer;
-        padding: 8px;
-        border-radius: 6px;
+    .nav-item + .nav-item {
+        border-left: 1px solid rgba(255, 255, 255, 0.3);
     }
     
-    .search-toggle:hover {
-        background: rgba(255, 255, 255, 0.1);
+    .hero-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+        padding: 0 1rem;
+    }
+    
+    .hero-image {
+        justify-self: center;
+        order: -1;
+    }
+    
+    .artist-portrait {
+        width: 280px;
+        height: 280px;
+        margin: 0 auto;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-description {
+        font-size: 1rem;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-description {
+        font-size: 1rem;
     }
 }
 
