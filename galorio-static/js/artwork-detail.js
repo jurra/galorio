@@ -1,6 +1,6 @@
 /**
- * Artwork Detail Page Script
- * Handles individual artwork display, interactions, and contact forms
+ * Enhanced Artwork Detail Page Script
+ * Handles zoom, carousel, mobile overlay, and interactions
  */
 
 import { MetadataProcessor } from './metadata.js';
@@ -8,7 +8,12 @@ import { MetadataProcessor } from './metadata.js';
 // Global variables
 let currentArtwork = null;
 let metadataProcessor = null;
-let relatedArtworks = [];
+let currentImages = [];
+let currentImageIndex = 0;
+let zoomLevel = 1;
+let isDragging = false;
+let dragStart = { x: 0, y: 0 };
+let imageOffset = { x: 0, y: 0 };
 
 // Initialize the artwork detail page
 document.addEventListener('DOMContentLoaded', async function() {
@@ -42,21 +47,21 @@ async function loadArtworkData(artworkId) {
         // Initialize metadata and get all artworks
         const allArtworks = await metadataProcessor.initialize();
         
-        // Find the specific artwork
+        // Find the specific artwork and related images
         currentArtwork = metadataProcessor.getArtworkById(artworkId);
         
         if (!currentArtwork) {
             showErrorState('Artwork not found');
             return;
         }
+
+        // Find all images for this artwork (support for multiple images)
+        await findArtworkImages(artworkId);
         
         // Display the artwork
         displayArtwork(currentArtwork);
         
-        // Load related artworks
-        loadRelatedArtworks(currentArtwork, allArtworks);
-        
-        // Setup interactions
+        // Setup all interactions
         setupInteractions();
         
         // Update SEO metadata
@@ -72,28 +77,46 @@ async function loadArtworkData(artworkId) {
 }
 
 /**
- * Display artwork information
+ * Find all images for an artwork (supports numbered versions)
+ */
+async function findArtworkImages(artworkId) {
+    currentImages = [currentArtwork.imageUrl];
+    
+    // Check for additional numbered images
+    const baseImageUrl = currentArtwork.imageUrl;
+    const baseName = baseImageUrl.split('.')[0]; // Remove extension
+    const extension = baseImageUrl.split('.').pop();
+    
+    // Try to find numbered versions (artwork_001.jpg, artwork_002.jpg, etc.)
+    for (let i = 1; i <= 10; i++) {
+        const numberedUrl = `${baseName}_${i.toString().padStart(3, '0')}.${extension}`;
+        try {
+            const response = await fetch(numberedUrl, { method: 'HEAD' });
+            if (response.ok) {
+                currentImages.push(numberedUrl);
+            }
+        } catch (error) {
+            // Image doesn't exist, continue
+            break;
+        }
+    }
+    
+    currentImageIndex = 0;
+}
+
+/**
+ * Display artwork information with enhanced features
  */
 function displayArtwork(artwork) {
+    hideLoadingState();
+    
     // Update page title
     document.getElementById('page-title').textContent = `${artwork.title || 'Artwork'} | Art Portfolio`;
-    
-    // Breadcrumb
-    const breadcrumbCollection = document.getElementById('breadcrumb-collection');
-    const breadcrumbTitle = document.getElementById('breadcrumb-title');
-    
-    if (breadcrumbCollection) {
-        breadcrumbCollection.textContent = artwork.collection || 'Portfolio';
-    }
-    
-    if (breadcrumbTitle) {
-        breadcrumbTitle.textContent = artwork.title || 'Untitled';
-    }
     
     // Main image
     const artworkImage = document.getElementById('artwork-image');
     if (artworkImage) {
-        artworkImage.src = artwork.imageUrl;
+        artworkImage.src = currentImages[currentImageIndex];
         artworkImage.alt = artwork.title || 'Artwork';
     }
     
@@ -106,30 +129,353 @@ function displayArtwork(artwork) {
     updateTextContent('artwork-description-text', artwork.description || 'No description available.');
     updateTextContent('artwork-price', artwork.price || 'Price on request');
     
-    // Availability status
-    const statusElement = document.getElementById('availability-status');
-    if (statusElement) {
+    // Availability badge
+    const badgeElement = document.getElementById('availability-badge');
+    if (badgeElement) {
         const isAvailable = artwork.available !== false && artwork.available !== 'false';
-        statusElement.textContent = isAvailable ? 'Available' : 'Sold';
-        statusElement.className = `availability-status ${isAvailable ? 'available' : 'sold'}`;
-    }
-    
-    // Handle purchase button visibility
-    const purchaseBtn = document.getElementById('purchase-btn');
-    if (purchaseBtn) {
-        const isAvailable = artwork.available !== false && artwork.available !== 'false';
+        badgeElement.textContent = isAvailable ? 'AVAILABLE' : 'SOLD';
+        badgeElement.className = `availability-badge ${isAvailable ? 'available' : 'sold'}`;
         if (!isAvailable) {
-            purchaseBtn.style.display = 'none';
+            badgeElement.style.backgroundColor = '#ffebee';
+            badgeElement.style.color = '#c62828';
         }
     }
     
-    // Tags
-    if (artwork.tags && artwork.tags.length > 0) {
-        displayTags(artwork.tags);
+    // Show carousel navigation if multiple images
+    if (currentImages.length > 1) {
+        setupImageCarousel();
     }
+    
+    // Setup mobile overlay
+    setupMobileOverlay(artwork);
     
     // Show the content
     document.getElementById('artwork-content').style.display = 'block';
+}
+
+/**
+ * Setup image carousel for multiple images
+ */
+function setupImageCarousel() {
+    const imageNav = document.getElementById('image-nav');
+    const thumbnailsContainer = document.getElementById('thumbnails-container');
+    
+    if (currentImages.length > 1) {
+        // Show navigation
+        if (imageNav) {
+            imageNav.style.display = 'flex';
+        }
+        
+        // Create thumbnails
+        if (thumbnailsContainer) {
+            thumbnailsContainer.style.display = 'block';
+            const thumbnailsScroll = thumbnailsContainer.querySelector('.thumbnails-scroll');
+            thumbnailsScroll.innerHTML = '';
+            
+            currentImages.forEach((imageUrl, index) => {
+                const thumbnail = document.createElement('div');
+                thumbnail.className = `thumbnail ${index === 0 ? 'active' : ''}`;
+                thumbnail.innerHTML = `<img src="${imageUrl}" alt="View ${index + 1}">`;
+                thumbnail.addEventListener('click', () => switchToImage(index));
+                thumbnailsScroll.appendChild(thumbnail);
+            });
+        }
+    }
+}
+
+/**
+ * Switch to a specific image in the carousel
+ */
+function switchToImage(index) {
+    if (index >= 0 && index < currentImages.length) {
+        currentImageIndex = index;
+        const artworkImage = document.getElementById('artwork-image');
+        if (artworkImage) {
+            artworkImage.src = currentImages[index];
+            
+            // Reset zoom when switching images
+            resetZoom();
+        }
+        
+        // Update thumbnails
+        const thumbnails = document.querySelectorAll('.thumbnail');
+        thumbnails.forEach((thumb, i) => {
+            thumb.classList.toggle('active', i === index);
+        });
+    }
+}
+
+/**
+ * Setup mobile details overlay
+ */
+function setupMobileOverlay(artwork) {
+    const mobileOverlay = document.getElementById('mobile-overlay');
+    if (mobileOverlay && window.innerWidth <= 768) {
+        mobileOverlay.innerHTML = `
+            <h1 class="artwork-title">${artwork.title || 'Untitled'}</h1>
+            <p class="artwork-artist">Tamara Grand</p>
+            <div class="mobile-metadata">
+                <div class="mobile-metadata-item">
+                    <label>Medium</label>
+                    <span>${artwork.medium || '-'}</span>
+                </div>
+                <div class="mobile-metadata-item">
+                    <label>Year</label>
+                    <span>${artwork.year || '-'}</span>
+                </div>
+                <div class="mobile-metadata-item">
+                    <label>Dimensions</label>
+                    <span>${artwork.dimensions || '-'}</span>
+                </div>
+                <div class="mobile-metadata-item">
+                    <label>Price</label>
+                    <span class="mobile-price">${artwork.price || 'Price on request'}</span>
+                </div>
+            </div>
+        `;
+        mobileOverlay.style.display = 'block';
+    }
+}
+
+/**
+ * Setup all interactions including zoom, pan, and navigation
+ */
+function setupInteractions() {
+    // Zoom controls
+    setupZoomControls();
+    
+    // Image navigation
+    setupImageNavigation();
+    
+    // Action buttons
+    setupActionButtons();
+    
+    // Fullscreen
+    setupFullscreen();
+    
+    // Pan and drag
+    setupImagePanning();
+}
+
+/**
+ * Setup zoom controls
+ */
+function setupZoomControls() {
+    const zoomInBtn = document.getElementById('zoom-in');
+    const zoomOutBtn = document.getElementById('zoom-out');
+    const zoomResetBtn = document.getElementById('zoom-reset');
+    
+    if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', () => {
+            zoomLevel = Math.min(zoomLevel * 1.3, 5);
+            applyZoom();
+        });
+    }
+    
+    if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', () => {
+            zoomLevel = Math.max(zoomLevel / 1.3, 0.5);
+            applyZoom();
+        });
+    }
+    
+    if (zoomResetBtn) {
+        zoomResetBtn.addEventListener('click', resetZoom);
+    }
+    
+    // Mouse wheel zoom
+    const imageViewport = document.querySelector('.image-viewport');
+    if (imageViewport) {
+        imageViewport.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY < 0 ? 1.1 : 0.9;
+            zoomLevel = Math.max(0.5, Math.min(5, zoomLevel * delta));
+            applyZoom();
+        });
+    }
+}
+
+/**
+ * Apply zoom transformation
+ */
+function applyZoom() {
+    const artworkImage = document.getElementById('artwork-image');
+    if (artworkImage) {
+        artworkImage.style.transform = `scale(${zoomLevel}) translate(${imageOffset.x}px, ${imageOffset.y}px)`;
+    }
+}
+
+/**
+ * Reset zoom to default
+ */
+function resetZoom() {
+    zoomLevel = 1;
+    imageOffset = { x: 0, y: 0 };
+    applyZoom();
+}
+
+/**
+ * Setup image panning/dragging
+ */
+function setupImagePanning() {
+    const imageViewport = document.querySelector('.image-viewport');
+    const artworkImage = document.getElementById('artwork-image');
+    
+    if (!imageViewport || !artworkImage) return;
+    
+    // Mouse events
+    artworkImage.addEventListener('mousedown', startDrag);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', endDrag);
+    
+    // Touch events for mobile
+    artworkImage.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        startDrag({ clientX: touch.clientX, clientY: touch.clientY });
+    });
+    
+    document.addEventListener('touchmove', (e) => {
+        if (isDragging) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            drag({ clientX: touch.clientX, clientY: touch.clientY });
+        }
+    });
+    
+    document.addEventListener('touchend', endDrag);
+}
+
+function startDrag(e) {
+    if (zoomLevel > 1) {
+        isDragging = true;
+        dragStart = { x: e.clientX - imageOffset.x, y: e.clientY - imageOffset.y };
+        document.querySelector('.image-viewport').classList.add('dragging');
+    }
+}
+
+function drag(e) {
+    if (isDragging && zoomLevel > 1) {
+        imageOffset.x = e.clientX - dragStart.x;
+        imageOffset.y = e.clientY - dragStart.y;
+        applyZoom();
+    }
+}
+
+function endDrag() {
+    isDragging = false;
+    document.querySelector('.image-viewport')?.classList.remove('dragging');
+}
+
+/**
+ * Setup image navigation
+ */
+function setupImageNavigation() {
+    const prevBtn = document.getElementById('prev-image');
+    const nextBtn = document.getElementById('next-image');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            const newIndex = currentImageIndex > 0 ? currentImageIndex - 1 : currentImages.length - 1;
+            switchToImage(newIndex);
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            const newIndex = currentImageIndex < currentImages.length - 1 ? currentImageIndex + 1 : 0;
+            switchToImage(newIndex);
+        });
+    }
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' && currentImages.length > 1) {
+            const newIndex = currentImageIndex > 0 ? currentImageIndex - 1 : currentImages.length - 1;
+            switchToImage(newIndex);
+        } else if (e.key === 'ArrowRight' && currentImages.length > 1) {
+            const newIndex = currentImageIndex < currentImages.length - 1 ? currentImageIndex + 1 : 0;
+            switchToImage(newIndex);
+        }
+    });
+}
+
+/**
+ * Setup action buttons
+ */
+function setupActionButtons() {
+    const inquireBtn = document.getElementById('inquire-btn');
+    const purchaseBtn = document.getElementById('purchase-btn');
+    const shareBtn = document.getElementById('share-btn');
+    
+    if (inquireBtn) {
+        inquireBtn.addEventListener('click', () => {
+            // Open contact modal or redirect to contact
+            window.open(`mailto:contact@tamaragrand.com?subject=Inquiry about ${currentArtwork.title}&body=Hi, I'm interested in learning more about "${currentArtwork.title}".`, '_blank');
+        });
+    }
+    
+    if (purchaseBtn) {
+        purchaseBtn.addEventListener('click', () => {
+            // Open purchase inquiry
+            window.open(`mailto:contact@tamaragrand.com?subject=Purchase Inquiry: ${currentArtwork.title}&body=Hi, I would like to purchase "${currentArtwork.title}". Please provide payment and shipping details.`, '_blank');
+        });
+    }
+    
+    if (shareBtn) {
+        shareBtn.addEventListener('click', () => {
+            if (navigator.share) {
+                navigator.share({
+                    title: currentArtwork.title,
+                    text: `Check out "${currentArtwork.title}" by Tamara Grand`,
+                    url: window.location.href
+                });
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(window.location.href);
+                alert('Link copied to clipboard!');
+            }
+        });
+    }
+}
+
+/**
+ * Setup fullscreen functionality
+ */
+function setupFullscreen() {
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const fullscreenModal = document.getElementById('fullscreen-modal');
+    const closeFullscreen = document.getElementById('close-fullscreen');
+    const fullscreenImage = document.getElementById('fullscreen-image');
+    
+    if (fullscreenBtn && fullscreenModal) {
+        fullscreenBtn.addEventListener('click', () => {
+            if (fullscreenImage) {
+                fullscreenImage.src = currentImages[currentImageIndex];
+            }
+            fullscreenModal.classList.add('active');
+        });
+    }
+    
+    if (closeFullscreen && fullscreenModal) {
+        closeFullscreen.addEventListener('click', () => {
+            fullscreenModal.classList.remove('active');
+        });
+        
+        // Close on backdrop click
+        fullscreenModal.addEventListener('click', (e) => {
+            if (e.target === fullscreenModal) {
+                fullscreenModal.classList.remove('active');
+            }
+        });
+    }
+    
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && fullscreenModal?.classList.contains('active')) {
+            fullscreenModal.classList.remove('active');
+        }
+    });
 }
 
 /**
@@ -143,395 +489,6 @@ function updateTextContent(elementId, text) {
 }
 
 /**
- * Display artwork tags
- */
-function displayTags(tags) {
-    const tagsContainer = document.getElementById('artwork-tags');
-    if (!tagsContainer) return;
-    
-    tagsContainer.innerHTML = '';
-    tags.forEach(tag => {
-        const tagElement = document.createElement('span');
-        tagElement.className = 'tag';
-        tagElement.textContent = tag;
-        tagsContainer.appendChild(tagElement);
-    });
-    
-    tagsContainer.style.display = 'flex';
-}
-
-/**
- * Load and display related artworks
- */
-function loadRelatedArtworks(artwork, allArtworks) {
-    const collection = artwork.collection;
-    const artworkId = artwork.id;
-    
-    // Find artworks from the same collection
-    relatedArtworks = allArtworks
-        .filter(item => item.collection === collection && item.id !== artworkId)
-        .slice(0, 6); // Limit to 6 related items
-    
-    if (relatedArtworks.length > 0) {
-        displayRelatedArtworks(relatedArtworks);
-    }
-}
-
-/**
- * Display related artworks
- */
-function displayRelatedArtworks(artworks) {
-    const relatedSection = document.getElementById('related-section');
-    const relatedGrid = document.getElementById('related-grid');
-    
-    if (!relatedSection || !relatedGrid) return;
-    
-    relatedGrid.innerHTML = '';
-    
-    artworks.forEach(artwork => {
-        const relatedItem = createRelatedArtworkItem(artwork);
-        relatedGrid.appendChild(relatedItem);
-    });
-    
-    relatedSection.style.display = 'block';
-}
-
-/**
- * Create a related artwork item
- */
-function createRelatedArtworkItem(artwork) {
-    const item = document.createElement('a');
-    item.className = 'related-item';
-    item.href = `./artwork.html?id=${artwork.id}`;
-    
-    const image = document.createElement('img');
-    image.src = artwork.imageUrl;
-    image.alt = artwork.title || 'Artwork';
-    image.loading = 'lazy';
-    
-    const title = document.createElement('h4');
-    title.textContent = artwork.title || 'Untitled';
-    
-    const info = document.createElement('p');
-    const infoText = [artwork.medium, artwork.year].filter(Boolean).join(' • ');
-    info.textContent = infoText;
-    
-    item.appendChild(image);
-    item.appendChild(title);
-    item.appendChild(info);
-    
-    return item;
-}
-
-/**
- * Setup all interactions
- */
-function setupInteractions() {
-    setupFullscreenModal();
-    setupContactModal();
-    setupShareFunctionality();
-    setupKeyboardNavigation();
-}
-
-/**
- * Setup fullscreen modal
- */
-function setupFullscreenModal() {
-    const fullscreenBtn = document.getElementById('fullscreen-btn');
-    const fullscreenModal = document.getElementById('fullscreen-modal');
-    const fullscreenImage = document.getElementById('fullscreen-image');
-    const closeFullscreen = document.getElementById('close-fullscreen');
-    
-    if (fullscreenBtn && fullscreenModal && fullscreenImage && closeFullscreen) {
-        fullscreenBtn.addEventListener('click', () => {
-            fullscreenImage.src = currentArtwork.imageUrl;
-            fullscreenImage.alt = currentArtwork.title || 'Artwork';
-            fullscreenModal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        });
-        
-        closeFullscreen.addEventListener('click', closeFullscreenModal);
-        
-        fullscreenModal.addEventListener('click', (e) => {
-            if (e.target === fullscreenModal) {
-                closeFullscreenModal();
-            }
-        });
-    }
-}
-
-/**
- * Close fullscreen modal
- */
-function closeFullscreenModal() {
-    const fullscreenModal = document.getElementById('fullscreen-modal');
-    if (fullscreenModal) {
-        fullscreenModal.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-}
-
-/**
- * Setup contact modal
- */
-function setupContactModal() {
-    const inquireBtn = document.getElementById('inquire-btn');
-    const purchaseBtn = document.getElementById('purchase-btn');
-    const contactModal = document.getElementById('contact-modal');
-    const closeModal = document.getElementById('close-modal');
-    const cancelContact = document.getElementById('cancel-contact');
-    const contactForm = document.getElementById('contact-form');
-    const modalTitle = document.getElementById('modal-title');
-    const inquiryType = document.getElementById('inquiry-type');
-    
-    if (inquireBtn) {
-        inquireBtn.addEventListener('click', () => {
-            modalTitle.textContent = 'Inquire About Artwork';
-            inquiryType.value = 'general';
-            openContactModal();
-        });
-    }
-    
-    if (purchaseBtn) {
-        purchaseBtn.addEventListener('click', () => {
-            modalTitle.textContent = 'Purchase Artwork';
-            inquiryType.value = 'purchase';
-            openContactModal();
-        });
-    }
-    
-    if (closeModal) {
-        closeModal.addEventListener('click', closeContactModal);
-    }
-    
-    if (cancelContact) {
-        cancelContact.addEventListener('click', closeContactModal);
-    }
-    
-    if (contactModal) {
-        contactModal.addEventListener('click', (e) => {
-            if (e.target === contactModal) {
-                closeContactModal();
-            }
-        });
-    }
-    
-    if (contactForm) {
-        contactForm.addEventListener('submit', handleContactSubmission);
-    }
-}
-
-/**
- * Open contact modal
- */
-function openContactModal() {
-    const contactModal = document.getElementById('contact-modal');
-    const messageField = document.getElementById('contact-message');
-    
-    if (contactModal) {
-        contactModal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        
-        // Pre-fill message with artwork info
-        if (messageField && currentArtwork) {
-            const artworkInfo = `I'm interested in "${currentArtwork.title || 'this artwork'}"`;
-            if (!messageField.value || messageField.value.includes("I'm interested in")) {
-                messageField.value = artworkInfo + '\n\n';
-            }
-        }
-    }
-}
-
-/**
- * Close contact modal
- */
-function closeContactModal() {
-    const contactModal = document.getElementById('contact-modal');
-    if (contactModal) {
-        contactModal.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-}
-
-/**
- * Handle contact form submission
- */
-function handleContactSubmission(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData);
-    
-    // Add artwork information
-    data.artworkTitle = currentArtwork?.title || 'Unknown';
-    data.artworkId = currentArtwork?.id || 'Unknown';
-    
-    // Here you would typically send the data to your backend
-    // For now, we'll show a success message and generate an email
-    console.log('Contact form submission:', data);
-    
-    // Generate mailto link as fallback
-    const subject = encodeURIComponent(`Inquiry about ${data.artworkTitle}`);
-    const body = encodeURIComponent(
-        `Name: ${data.name}\n` +
-        `Email: ${data.email}\n` +
-        `Phone: ${data.phone || 'Not provided'}\n` +
-        `Inquiry Type: ${data.inquiryType}\n` +
-        `Artwork: ${data.artworkTitle}\n\n` +
-        `Message:\n${data.message}`
-    );
-    
-    const mailtoLink = `mailto:artist@example.com?subject=${subject}&body=${body}`;
-    
-    // Show success message
-    showSuccessMessage();
-    
-    // Close modal
-    closeContactModal();
-    
-    // Open email client
-    window.open(mailtoLink);
-}
-
-/**
- * Show success message
- */
-function showSuccessMessage() {
-    const message = document.createElement('div');
-    message.className = 'success-message';
-    message.innerHTML = `
-        <div class="success-content">
-            <h4>Thank you for your inquiry!</h4>
-            <p>Your email client should open with a pre-filled message. If not, please contact us directly.</p>
-        </div>
-    `;
-    message.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #d4edda;
-        color: #155724;
-        padding: 1rem;
-        border-radius: 6px;
-        border: 1px solid #c3e6cb;
-        z-index: 1002;
-        max-width: 300px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    `;
-    
-    document.body.appendChild(message);
-    
-    setTimeout(() => {
-        message.remove();
-    }, 5000);
-}
-
-/**
- * Setup share functionality
- */
-function setupShareFunctionality() {
-    const shareBtn = document.getElementById('share-btn');
-    
-    if (shareBtn) {
-        shareBtn.addEventListener('click', async () => {
-            const shareData = {
-                title: currentArtwork?.title || 'Artwork',
-                text: `Check out this artwork: ${currentArtwork?.title || 'Untitled'}`,
-                url: window.location.href
-            };
-            
-            if (navigator.share) {
-                try {
-                    await navigator.share(shareData);
-                } catch (error) {
-                    console.log('Error sharing:', error);
-                    fallbackShare();
-                }
-            } else {
-                fallbackShare();
-            }
-        });
-    }
-}
-
-/**
- * Fallback share functionality
- */
-function fallbackShare() {
-    const url = window.location.href;
-    const title = currentArtwork?.title || 'Artwork';
-    
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(url).then(() => {
-            showToast('Link copied to clipboard!');
-        });
-    } else {
-        // Create temporary input to copy URL
-        const input = document.createElement('input');
-        input.value = url;
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand('copy');
-        document.body.removeChild(input);
-        showToast('Link copied to clipboard!');
-    }
-}
-
-/**
- * Show toast message
- */
-function showToast(message) {
-    const toast = document.createElement('div');
-    toast.textContent = message;
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #333;
-        color: white;
-        padding: 12px 24px;
-        border-radius: 6px;
-        z-index: 1002;
-        font-size: 0.9rem;
-    `;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
-}
-
-/**
- * Setup keyboard navigation
- */
-function setupKeyboardNavigation() {
-    document.addEventListener('keydown', (e) => {
-        // Escape key closes modals
-        if (e.key === 'Escape') {
-            const fullscreenModal = document.getElementById('fullscreen-modal');
-            const contactModal = document.getElementById('contact-modal');
-            
-            if (fullscreenModal && fullscreenModal.classList.contains('active')) {
-                closeFullscreenModal();
-            } else if (contactModal && contactModal.classList.contains('active')) {
-                closeContactModal();
-            }
-        }
-        
-        // Space bar or Enter for fullscreen
-        if ((e.key === ' ' || e.key === 'Enter') && !e.target.matches('input, textarea, button')) {
-            e.preventDefault();
-            const fullscreenBtn = document.getElementById('fullscreen-btn');
-            if (fullscreenBtn) {
-                fullscreenBtn.click();
-            }
-        }
-    });
-}
-
-/**
  * Update SEO metadata
  */
 function updateSEOMetadata(artwork) {
@@ -542,39 +499,44 @@ function updateSEOMetadata(artwork) {
     const ogUrl = document.getElementById('og-url');
     
     if (ogTitle) ogTitle.content = artwork.title || 'Artwork';
-    if (ogDescription) ogDescription.content = artwork.description || 'View this beautiful artwork';
-    if (ogImage) ogImage.content = new URL(artwork.imageUrl, window.location.origin).href;
+    if (ogDescription) ogDescription.content = artwork.description || 'View this artwork by Tamara Grand';
+    if (ogImage) ogImage.content = artwork.imageUrl;
     if (ogUrl) ogUrl.content = window.location.href;
     
-    // Update schema.org structured data
+    // Update structured data
     const schemaScript = document.getElementById('artwork-schema');
     if (schemaScript) {
         const schema = {
             "@context": "https://schema.org",
             "@type": "VisualArtwork",
-            "name": artwork.title || 'Untitled',
+            "name": artwork.title,
             "creator": {
                 "@type": "Person",
                 "name": "Tamara Grand"
             },
-            "description": artwork.description || '',
-            "image": new URL(artwork.imageUrl, window.location.origin).href,
-            "url": window.location.href,
-            "artMedium": artwork.medium || '',
-            "width": artwork.dimensions || '',
-            "dateCreated": artwork.year || ''
-        };
-        
-        if (artwork.price && artwork.available !== false) {
-            schema.offers = {
+            "image": artwork.imageUrl,
+            "description": artwork.description,
+            "medium": artwork.medium,
+            "dateCreated": artwork.year,
+            "offers": {
                 "@type": "Offer",
                 "price": artwork.price,
-                "availability": "https://schema.org/InStock"
-            };
-        }
-        
+                "availability": artwork.available ? "InStock" : "OutOfStock"
+            }
+        };
         schemaScript.textContent = JSON.stringify(schema);
     }
+}
+
+/**
+ * Show loading state
+ */
+function showLoadingState() {
+    const loadingState = document.getElementById('loading-state');
+    const artworkContent = document.getElementById('artwork-content');
+    
+    if (loadingState) loadingState.style.display = 'flex';
+    if (artworkContent) artworkContent.style.display = 'none';
 }
 
 /**
@@ -582,9 +544,7 @@ function updateSEOMetadata(artwork) {
  */
 function hideLoadingState() {
     const loadingState = document.getElementById('loading-state');
-    if (loadingState) {
-        loadingState.style.display = 'none';
-    }
+    if (loadingState) loadingState.style.display = 'none';
 }
 
 /**
@@ -592,24 +552,27 @@ function hideLoadingState() {
  */
 function showErrorState(message) {
     const loadingState = document.getElementById('loading-state');
-    const errorState = document.getElementById('error-state');
+    const artworkContent = document.getElementById('artwork-content');
     
-    if (loadingState) {
-        loadingState.style.display = 'none';
-    }
+    if (loadingState) loadingState.style.display = 'none';
+    if (artworkContent) artworkContent.style.display = 'none';
     
-    if (errorState) {
-        errorState.style.display = 'block';
-        const errorMessage = errorState.querySelector('p');
-        if (errorMessage) {
-            errorMessage.textContent = message || 'An error occurred while loading the artwork.';
-        }
+    // Create error display
+    const container = document.querySelector('.container');
+    if (container) {
+        container.innerHTML += `
+            <div class="error-state">
+                <h2>Unable to Load Artwork</h2>
+                <p>${message}</p>
+                <a href="./index.html" class="btn btn-primary">Return to Gallery</a>
+            </div>
+        `;
     }
 }
 
-// Export for debugging
-window.artworkDetailApp = {
-    currentArtwork,
-    metadataProcessor,
-    relatedArtworks
-};
+// Handle responsive behavior
+window.addEventListener('resize', () => {
+    if (currentArtwork) {
+        setupMobileOverlay(currentArtwork);
+    }
+});
