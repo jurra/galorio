@@ -10,7 +10,7 @@ let currentArtwork = null;
 let metadataProcessor = null;
 let currentImages = [];
 let currentImageIndex = 0;
-let zoomLevel = 1;
+let zoomLevel = 1 ;
 let isDragging = false;
 let dragStart = { x: 0, y: 0 };
 let imageOffset = { x: 0, y: 0 };
@@ -118,6 +118,12 @@ function displayArtwork(artwork) {
     if (artworkImage) {
         artworkImage.src = currentImages[currentImageIndex];
         artworkImage.alt = artwork.title || 'Artwork';
+        
+        // Reset zoom and center image when it loads
+        artworkImage.onload = () => {
+            resetZoom();
+            centerImage();
+        };
     }
     
     // Artwork details
@@ -146,8 +152,8 @@ function displayArtwork(artwork) {
         setupImageCarousel();
     }
     
-    // Setup mobile overlay
-    setupMobileOverlay(artwork);
+    // Setup mobile title
+    setupMobileTitle(artwork);
     
     // Show the content
     document.getElementById('artwork-content').style.display = 'block';
@@ -193,8 +199,11 @@ function switchToImage(index) {
         if (artworkImage) {
             artworkImage.src = currentImages[index];
             
-            // Reset zoom when switching images
-            resetZoom();
+            // Reset zoom and center when switching images
+            artworkImage.onload = () => {
+                resetZoom();
+                centerImage();
+            };
         }
         
         // Update thumbnails
@@ -206,34 +215,12 @@ function switchToImage(index) {
 }
 
 /**
- * Setup mobile details overlay
+ * Setup mobile title below image
  */
-function setupMobileOverlay(artwork) {
-    const mobileOverlay = document.getElementById('mobile-overlay');
-    if (mobileOverlay && window.innerWidth <= 768) {
-        mobileOverlay.innerHTML = `
-            <h1 class="artwork-title">${artwork.title || 'Untitled'}</h1>
-            <p class="artwork-artist">Tamara Grand</p>
-            <div class="mobile-metadata">
-                <div class="mobile-metadata-item">
-                    <label>Medium</label>
-                    <span>${artwork.medium || '-'}</span>
-                </div>
-                <div class="mobile-metadata-item">
-                    <label>Year</label>
-                    <span>${artwork.year || '-'}</span>
-                </div>
-                <div class="mobile-metadata-item">
-                    <label>Dimensions</label>
-                    <span>${artwork.dimensions || '-'}</span>
-                </div>
-                <div class="mobile-metadata-item">
-                    <label>Price</label>
-                    <span class="mobile-price">${artwork.price || 'Price on request'}</span>
-                </div>
-            </div>
-        `;
-        mobileOverlay.style.display = 'block';
+function setupMobileTitle(artwork) {
+    const mobileTitle = document.getElementById('mobile-artwork-title');
+    if (mobileTitle) {
+        mobileTitle.textContent = artwork.title || 'Untitled';
     }
 }
 
@@ -296,22 +283,66 @@ function setupZoomControls() {
 }
 
 /**
- * Apply zoom transformation
+ * Apply zoom transformation with proper centering
  */
 function applyZoom() {
     const artworkImage = document.getElementById('artwork-image');
     if (artworkImage) {
-        artworkImage.style.transform = `scale(${zoomLevel}) translate(${imageOffset.x}px, ${imageOffset.y}px)`;
+        const transform = [];
+        
+        // Apply zoom scale
+        if (zoomLevel !== 1) {
+            transform.push(`scale(${zoomLevel})`);
+        }
+        
+        // Apply pan offset (only when zoomed)
+        if (zoomLevel > 1 && (imageOffset.x !== 0 || imageOffset.y !== 0)) {
+            transform.push(`translate(${imageOffset.x / zoomLevel}px, ${imageOffset.y / zoomLevel}px)`);
+        }
+        
+        artworkImage.style.transform = transform.join(' ');
     }
 }
 
 /**
- * Reset zoom to default
+ * Reset zoom to default and center image
  */
 function resetZoom() {
     zoomLevel = 1;
     imageOffset = { x: 0, y: 0 };
-    applyZoom();
+    centerImage();
+}
+
+/**
+ * Center the image in the viewport
+ */
+function centerImage() {
+    const artworkImage = document.getElementById('artwork-image');
+    const imageViewport = document.querySelector('.image-viewport');
+    
+    if (artworkImage && imageViewport) {
+        // Reset any transform
+        artworkImage.style.transform = '';
+        
+        // Force a reflow to ensure accurate measurements
+        artworkImage.offsetHeight;
+        
+        // Get natural dimensions and container size
+        const naturalWidth = artworkImage.naturalWidth;
+        const naturalHeight = artworkImage.naturalHeight;
+        const containerWidth = imageViewport.clientWidth;
+        const containerHeight = imageViewport.clientHeight;
+        
+        // Calculate scale to fit image while maintaining aspect ratio
+        const scaleX = (containerWidth * 2.5) / naturalWidth;
+        const scaleY = (containerHeight * 2.5) / naturalHeight;
+        const scale = Math.min(scaleX, scaleY, 1); // Don't scale up beyond natural size
+        
+        // Apply the scale if needed
+        if (scale < 1) {
+            artworkImage.style.transform = `scale(${scale})`;
+        }
+    }
 }
 
 /**
@@ -570,9 +601,14 @@ function showErrorState(message) {
     }
 }
 
-// Handle responsive behavior
+// Handle responsive behavior and recentering
 window.addEventListener('resize', () => {
     if (currentArtwork) {
-        setupMobileOverlay(currentArtwork);
+        setupMobileTitle(currentArtwork);
+        
+        // Recenter image when window is resized
+        if (zoomLevel === 1) {
+            centerImage();
+        }
     }
 });

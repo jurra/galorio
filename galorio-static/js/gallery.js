@@ -229,10 +229,8 @@ export class Gallery {
         artworkElement.appendChild(image);
         artworkElement.appendChild(overlay);
 
-        // Click handler to view artwork details
-        artworkElement.addEventListener('click', () => {
-            this.openArtworkDetail(artwork);
-        });
+        // Click and touch handlers for artwork details
+        this.addArtworkInteraction(artworkElement, artwork);
 
         return artworkElement;
     }
@@ -363,7 +361,7 @@ export class Gallery {
             artworkElement.style.height = '200px';
         };
 
-        // Overlay
+        // Enhanced Overlay
         const overlay = document.createElement('div');
         overlay.className = 'collection-artwork-overlay';
 
@@ -374,20 +372,61 @@ export class Gallery {
             overlay.appendChild(title);
         }
 
+        // Artist
+        const artist = document.createElement('p');
+        artist.className = 'collection-artwork-artist';
+        artist.textContent = 'Tamara Grand';
+        overlay.appendChild(artist);
+
+        // Simplified metadata for basic overlay
+        if (artwork.medium && artwork.year) {
+            const metadata = document.createElement('div');
+            metadata.className = 'collection-artwork-metadata';
+            
+            const mediumItem = document.createElement('div');
+            mediumItem.className = 'collection-artwork-meta-item';
+            mediumItem.innerHTML = `
+                <span class="collection-artwork-meta-label">MEDIUM</span>
+                <span class="collection-artwork-meta-value">${artwork.medium}</span>
+            `;
+            metadata.appendChild(mediumItem);
+
+            const yearItem = document.createElement('div');
+            yearItem.className = 'collection-artwork-meta-item';
+            yearItem.innerHTML = `
+                <span class="collection-artwork-meta-label">YEAR</span>
+                <span class="collection-artwork-meta-value">${artwork.year}</span>
+            `;
+            metadata.appendChild(yearItem);
+
+            overlay.appendChild(metadata);
+        }
+
         if (artwork.price) {
-            const price = document.createElement('p');
+            const pricing = document.createElement('div');
+            pricing.className = 'collection-artwork-pricing';
+
+            const price = document.createElement('span');
             price.className = 'collection-artwork-price';
             price.textContent = artwork.price;
-            overlay.appendChild(price);
+            pricing.appendChild(price);
+
+            // Availability status
+            const status = document.createElement('span');
+            status.className = 'collection-artwork-status';
+            const isAvailable = artwork.available !== false && artwork.available !== 'false';
+            status.textContent = isAvailable ? 'AVAILABLE' : 'SOLD';
+            status.classList.add(isAvailable ? 'available' : 'sold');
+            pricing.appendChild(status);
+
+            overlay.appendChild(pricing);
         }
 
         artworkElement.appendChild(image);
         artworkElement.appendChild(overlay);
 
-        // Click handler to view artwork details
-        artworkElement.addEventListener('click', () => {
-            this.openArtworkDetail(artwork);
-        });
+        // Click and touch handlers for artwork details
+        this.addArtworkInteraction(artworkElement, artwork);
 
         return artworkElement;
     }
@@ -435,7 +474,7 @@ export class Gallery {
             image.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNHB4IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2UgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
         };
 
-        // Overlay
+        // Enhanced Overlay with structured metadata
         const overlay = document.createElement('div');
         overlay.className = 'collection-artwork-overlay';
 
@@ -447,36 +486,81 @@ export class Gallery {
             overlay.appendChild(title);
         }
 
+        // Artist
+        const artist = document.createElement('p');
+        artist.className = 'collection-artwork-artist';
+        artist.textContent = 'Tamara Grand';
+        overlay.appendChild(artist);
+
+        // Metadata grid
+        const metadata = document.createElement('div');
+        metadata.className = 'collection-artwork-metadata';
+
         // Medium
         if (artwork.medium) {
-            const medium = document.createElement('p');
-            medium.className = 'collection-artwork-medium';
-            medium.textContent = artwork.medium;
-            overlay.appendChild(medium);
+            const mediumItem = document.createElement('div');
+            mediumItem.className = 'collection-artwork-meta-item';
+            mediumItem.innerHTML = `
+                <span class="collection-artwork-meta-label">MEDIUM</span>
+                <span class="collection-artwork-meta-value">${artwork.medium}</span>
+            `;
+            metadata.appendChild(mediumItem);
         }
 
-        // Dimensions with proper units
+        // Dimensions
         if (artwork.dimensions) {
-            const dimensions = document.createElement('p');
-            dimensions.className = 'collection-artwork-dimensions';
-            dimensions.textContent = this.formatDimensions(artwork.dimensions);
-            overlay.appendChild(dimensions);
+            const dimensionsItem = document.createElement('div');
+            dimensionsItem.className = 'collection-artwork-meta-item';
+            dimensionsItem.innerHTML = `
+                <span class="collection-artwork-meta-label">DIMENSIONS</span>
+                <span class="collection-artwork-meta-value">${this.formatDimensions(artwork.dimensions)}</span>
+            `;
+            metadata.appendChild(dimensionsItem);
         }
 
-        // Year if available
+        // Year
         if (artwork.year) {
-            const year = document.createElement('p');
-            year.className = 'collection-artwork-year';
-            year.textContent = artwork.year;
-            overlay.appendChild(year);
+            const yearItem = document.createElement('div');
+            yearItem.className = 'collection-artwork-meta-item';
+            yearItem.innerHTML = `
+                <span class="collection-artwork-meta-label">YEAR</span>
+                <span class="collection-artwork-meta-value">${artwork.year}</span>
+            `;
+            metadata.appendChild(yearItem);
         }
 
-        // Price
+        // Collection
+        if (artwork.collection) {
+            const collectionItem = document.createElement('div');
+            collectionItem.className = 'collection-artwork-meta-item';
+            collectionItem.innerHTML = `
+                <span class="collection-artwork-meta-label">COLLECTION</span>
+                <span class="collection-artwork-meta-value">${artwork.collection}</span>
+            `;
+            metadata.appendChild(collectionItem);
+        }
+
+        overlay.appendChild(metadata);
+
+        // Pricing section
         if (artwork.price) {
-            const price = document.createElement('p');
+            const pricing = document.createElement('div');
+            pricing.className = 'collection-artwork-pricing';
+
+            const price = document.createElement('span');
             price.className = 'collection-artwork-price';
             price.textContent = artwork.price;
-            overlay.appendChild(price);
+            pricing.appendChild(price);
+
+            // Availability status
+            const status = document.createElement('span');
+            status.className = 'collection-artwork-status';
+            const isAvailable = artwork.available !== false && artwork.available !== 'false';
+            status.textContent = isAvailable ? 'AVAILABLE' : 'SOLD';
+            status.classList.add(isAvailable ? 'available' : 'sold');
+            pricing.appendChild(status);
+
+            overlay.appendChild(pricing);
         }
 
         // Availability status
@@ -981,5 +1065,45 @@ export class Gallery {
         // Navigate to the artwork detail page
         const detailUrl = `artwork.html?id=${encodeURIComponent(artwork.id)}`;
         window.location.href = detailUrl;
+    }
+
+    /**
+     * Add interactive handlers for both mouse and touch
+     */
+    addArtworkInteraction(artworkElement, artwork) {
+        // Click handler for navigation
+        artworkElement.addEventListener('click', () => {
+            this.openArtworkDetail(artwork);
+        });
+
+        // Touch interaction for mobile overlay enhancement
+        if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+            let touchTimeout;
+
+            artworkElement.addEventListener('touchstart', (e) => {
+                // Add touched class for enhanced overlay visibility
+                artworkElement.classList.add('touched');
+                
+                // Clear any existing timeout
+                if (touchTimeout) {
+                    clearTimeout(touchTimeout);
+                }
+            });
+
+            artworkElement.addEventListener('touchend', () => {
+                // Remove touched class after a delay
+                touchTimeout = setTimeout(() => {
+                    artworkElement.classList.remove('touched');
+                }, 2000);
+            });
+
+            // Handle touch cancel
+            artworkElement.addEventListener('touchcancel', () => {
+                artworkElement.classList.remove('touched');
+                if (touchTimeout) {
+                    clearTimeout(touchTimeout);
+                }
+            });
+        }
     }
 }
