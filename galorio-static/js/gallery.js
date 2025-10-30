@@ -26,12 +26,65 @@ export class Gallery {
             this.currentArtworks = data.artworks || data; // Handle both old and new format
             this.collections = data.collections || new Map();
             console.log(`🖼️ Gallery received ${this.currentArtworks.length} artworks and ${this.collections.size} collections`);
-            this.renderCollections();
+            
+            // Debug: Log collection structure
+            console.log('🔍 Collections structure:', Array.from(this.collections.keys()));
+            this.collections.forEach((collection, id) => {
+                console.log(`  - ${id}: ${collection.artworks?.length || 0} artworks`);
+            });
+            
+            // Reset any cached image states
+            this.resetImageStates();
+            
+            // Ensure we have valid collections before rendering
+            if (this.collections && this.collections.size > 0) {
+                console.log('📚 Rendering collections view');
+                this.renderCollections();
+            } else {
+                console.log('🖼️ No collections found, rendering individual artworks');
+                this.render();
+            }
+            
             console.log('✅ Gallery initialization complete');
         } catch (error) {
             console.error('❌ Error initializing gallery:', error);
             this.renderError();
         }
+    }
+
+    /**
+     * Reset any cached image states that might persist from detail page
+     */
+    resetImageStates() {
+        // Clear any transform styles that might be cached
+        const allImages = document.querySelectorAll('img');
+        allImages.forEach(img => {
+            img.style.transform = '';
+            img.style.transition = '';
+            img.style.willChange = '';
+            img.removeAttribute('data-zoom');
+            
+            // Force reflow to ensure styles are applied
+            img.offsetHeight;
+        });
+        
+        // Clear any viewport classes that might persist
+        const viewports = document.querySelectorAll('.image-viewport');
+        viewports.forEach(viewport => {
+            viewport.classList.remove('dragging');
+            viewport.removeAttribute('data-zoom');
+        });
+        
+        // Additional cleanup for gallery-specific elements
+        const galleryImages = document.querySelectorAll('.collection-artwork img, .single-collection-artwork img, .gallery-item img');
+        galleryImages.forEach(img => {
+            // Remove any inline styles that might have been applied
+            img.removeAttribute('style');
+            // Force a reflow
+            img.offsetHeight;
+        });
+        
+        console.log('🔄 Image states reset for gallery view');
     }
 
     /**
@@ -72,27 +125,82 @@ export class Gallery {
             return;
         }
 
+        console.log('🎬 Starting renderCollections()');
+        console.log('📊 Container dimensions:', {
+            width: this.container.offsetWidth,
+            height: this.container.offsetHeight,
+            clientWidth: this.container.clientWidth,
+            clientHeight: this.container.clientHeight
+        });
+
         // Clear existing content
         this.container.innerHTML = '';
 
         if (!this.collections || this.collections.size === 0) {
-            this.renderEmptyState();
+            console.log('⚠️ No collections found, falling back to individual artwork view');
+            this.render();
             return;
         }
+
+        console.log(`📚 Rendering ${this.collections.size} collections`);
 
         // Create collections container
         const collectionsContainer = document.createElement('div');
         collectionsContainer.className = 'collections-container';
 
+        let renderedCollections = 0;
+
         // Render each collection as a row
         this.collections.forEach((collection, id) => {
             if (collection.artworks && collection.artworks.length > 0) {
+                console.log(`  📁 Rendering collection "${collection.name}" with ${collection.artworks.length} artworks`);
+                console.log(`  🎨 Collection artworks:`, collection.artworks.map(a => ({id: a.id, title: a.title, imageUrl: a.imageUrl})));
+                
                 const collectionRow = this.createCollectionRow(collection);
                 collectionsContainer.appendChild(collectionRow);
+                renderedCollections++;
+                
+                // Log collection row dimensions after creation
+                setTimeout(() => {
+                    console.log(`📏 Collection row "${collection.name}" dimensions:`, {
+                        width: collectionRow.offsetWidth,
+                        height: collectionRow.offsetHeight,
+                        scrollWidth: collectionRow.scrollWidth,
+                        className: collectionRow.className
+                    });
+                }, 100);
+                
+            } else {
+                console.log(`  ⚠️ Skipping empty collection: ${collection.name || id}`);
             }
         });
 
+        if (renderedCollections === 0) {
+            console.log('⚠️ No non-empty collections found, falling back to individual artwork view');
+            this.render();
+            return;
+        }
+
         this.container.appendChild(collectionsContainer);
+        console.log(`✅ Successfully rendered ${renderedCollections} collections`);
+        
+        // Log final container state
+        setTimeout(() => {
+            console.log('📊 Final container state:', {
+                containerHeight: this.container.offsetHeight,
+                collectionsContainerHeight: collectionsContainer.offsetHeight,
+                totalImages: collectionsContainer.querySelectorAll('img').length,
+                imageElements: Array.from(collectionsContainer.querySelectorAll('img')).map(img => ({
+                    src: img.src,
+                    width: img.offsetWidth,
+                    height: img.offsetHeight,
+                    naturalWidth: img.naturalWidth,
+                    naturalHeight: img.naturalHeight,
+                    transform: img.style.transform || 'none',
+                    scale: img.style.scale || 'none'
+                }))
+            });
+        }, 500);
     }
 
     /**
@@ -164,6 +272,25 @@ export class Gallery {
         image.src = artwork.imageUrl;
         image.alt = artwork.title || 'Artwork';
         image.loading = 'lazy';
+        
+        // Aggressive reset - ensure completely clean state
+        image.style.cssText = '';
+        image.removeAttribute('style');
+        image.style.transform = 'none !important';
+        image.style.transition = 'none !important';
+        image.style.willChange = 'auto !important';
+        image.style.scale = 'none !important';
+        image.style.zoom = 'normal !important';
+        image.style.width = '100%';
+        image.style.height = '70%';
+        image.style.objectFit = 'cover';
+        image.style.objectPosition = 'center';
+        image.style.display = 'block';
+        image.style.maxWidth = '100%';
+        image.style.maxHeight = '100%';
+        
+        // Force immediate reflow
+        image.offsetHeight;
 
         // Handle image load errors
         image.onerror = () => {
@@ -342,6 +469,26 @@ export class Gallery {
         image.src = artwork.imageUrl;
         image.alt = artwork.title || 'Artwork';
         image.loading = 'lazy';
+        
+        // Aggressive reset and size control
+        image.style.cssText = '';
+        image.removeAttribute('style');
+        image.style.setProperty('transform', 'none', 'important');
+        image.style.setProperty('transition', 'none', 'important');
+        image.style.setProperty('will-change', 'auto', 'important');
+        image.style.setProperty('width', '100%', 'important');
+        image.style.setProperty('height', '100%', 'important');
+        image.style.setProperty('object-fit', 'contain', 'important');
+        image.style.setProperty('object-position', 'center', 'important');
+        image.style.setProperty('max-width', '100%', 'important');
+        image.style.setProperty('max-height', '100%', 'important');
+        
+        // Set container dimensions early to prevent expansion
+        artworkElement.style.setProperty('width', 'auto', 'important');
+        artworkElement.style.setProperty('max-width', '300px', 'important');
+        artworkElement.style.setProperty('min-width', '150px', 'important');
+        artworkElement.style.setProperty('height', '250px', 'important'); // Default height
+        artworkElement.style.setProperty('flex-shrink', '0', 'important');
 
         // Calculate artwork dimensions if available
         if (artwork.dimensions) {
@@ -350,15 +497,25 @@ export class Gallery {
 
         // Handle image load to get natural dimensions and set proper size
         image.onload = () => {
+            console.log(`🖼️ Image loaded: ${artwork.id}`, {
+                src: image.src,
+                naturalWidth: image.naturalWidth,
+                naturalHeight: image.naturalHeight,
+                currentWidth: image.offsetWidth,
+                currentHeight: image.offsetHeight,
+                aspectRatio: image.naturalWidth / image.naturalHeight
+            });
             this.adjustArtworkDimensions(artworkElement, image, maxHeight);
         };
 
         // Handle image load errors
         image.onerror = () => {
+            console.error(`❌ Image failed to load: ${artwork.id} - ${image.src}`);
             image.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNHB4IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2UgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
             // Set fallback dimensions
             artworkElement.style.width = '250px';
             artworkElement.style.height = '200px';
+            console.log(`🔧 Set fallback dimensions for ${artwork.id}: 250px x 200px`);
         };
 
         // Enhanced Overlay
@@ -444,6 +601,12 @@ export class Gallery {
         image.src = artwork.imageUrl;
         image.alt = artwork.title || 'Artwork';
         image.loading = 'lazy';
+        
+        // Ensure clean initial state - reset any cached transforms
+        image.style.transform = '';
+        image.style.transition = '';
+        image.style.willChange = '';
+        image.removeAttribute('data-zoom');
 
         // Create promise that resolves when image loads with its dimensions
         const imageLoadPromise = new Promise((resolve) => {
@@ -587,16 +750,32 @@ export class Gallery {
         // Clamp height between reasonable bounds
         const clampedHeight = Math.min(Math.max(maxHeight, 150), 400);
         
-        console.log(`Setting collection "${row.dataset.collectionId}" height to ${clampedHeight}px`);
+        console.log(`🏗️ Collection height calculation for "${row.dataset.collectionId}":`, {
+            imageDimensions: imageDimensions.map(d => ({ width: d.width, height: d.height, aspectRatio: d.aspectRatio })),
+            standardWidth,
+            calculatedHeights: heights,
+            maxHeight,
+            clampedHeight,
+            finalHeight: `${clampedHeight}px`
+        });
         
         // Set the height on the row
         row.style.setProperty('--collection-height', `${clampedHeight}px`);
         
         // Apply the height to all artwork elements in this row
         const artworkElements = row.querySelectorAll('.collection-artwork');
+        console.log(`🎨 Setting dimensions for ${artworkElements.length} artwork elements`);
+        
         artworkElements.forEach((element, index) => {
             const dimensions = imageDimensions[index];
             const calculatedWidth = clampedHeight * dimensions.aspectRatio;
+            
+            console.log(`  📐 Artwork ${index + 1}:`, {
+                originalDimensions: dimensions,
+                calculatedWidth: `${calculatedWidth}px`,
+                height: `${clampedHeight}px`,
+                aspectRatio: dimensions.aspectRatio
+            });
             
             element.style.width = `${calculatedWidth}px`;
             element.style.height = `${clampedHeight}px`;
@@ -792,6 +971,12 @@ export class Gallery {
         image.src = artwork.imageUrl;
         image.alt = artwork.title || 'Artwork';
         image.loading = 'lazy';
+        
+        // Ensure clean initial state - reset any cached transforms
+        image.style.transform = '';
+        image.style.transition = '';
+        image.style.willChange = '';
+        image.removeAttribute('data-zoom');
 
         // Handle image load errors
         image.onerror = () => {

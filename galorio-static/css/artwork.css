@@ -67,10 +67,20 @@
     align-items: center;
     justify-content: center;
     cursor: grab;
+    position: relative;
 }
 
 .image-viewport.dragging {
     cursor: grabbing;
+}
+
+/* Only show grab cursor when zoomed in */
+.image-viewport[data-zoom="1"] {
+    cursor: default;
+}
+
+.image-viewport[data-zoom="1"] .artwork-image {
+    cursor: pointer; /* Indicate clickable for zoom */
 }
 
 .artwork-image {
@@ -79,10 +89,32 @@
     width: auto;
     height: auto;
     object-fit: contain;
-    transition: transform 0.3s ease;
+    transition: transform 0.15s ease-out;
     user-select: none;
     -webkit-user-drag: none;
     display: block;
+    will-change: transform; /* Optimize for GPU acceleration */
+    /* Allow transforms for zoom functionality */
+    transform: none;
+}
+
+/* Ensure artwork images can be transformed for zoom functionality */
+#artwork-image,
+.image-viewport img,
+.artwork-image {
+    transform: none; /* Allow JavaScript to control transforms */
+    transition: transform 0.15s ease-out !important;
+    will-change: transform !important;
+}
+
+/* Disable transition during dragging for immediate response */
+.image-viewport.dragging .artwork-image {
+    transition: none;
+}
+
+/* Smooth transition when zoom changes */
+.artwork-image.zooming {
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 /* Image Navigation */

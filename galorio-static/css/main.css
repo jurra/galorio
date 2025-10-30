@@ -12,6 +12,49 @@
     padding: 0;
 }
 
+/* Specific overrides for GALLERY images only - NOT artwork detail */
+/* Only target images that are specifically inside gallery containers */
+.collections-container .collection-artwork img,
+.collections-container .single-collection-artwork img,
+.collections-container .gallery-item img {
+    transform: none !important;
+    transition: none !important;
+    will-change: auto !important;
+    scale: none !important;
+    zoom: normal !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+}
+
+/* Ensure artwork detail images can transform properly for zoom */
+.artwork-detail img,
+.image-viewport img,
+#artwork-image,
+.artwork-image {
+    /* Remove transform restrictions to allow zoom functionality */
+    transition: initial !important;
+    will-change: initial !important;
+    scale: initial !important;
+    zoom: initial !important;
+}
+
+/* Allow transforms on interactive elements and artwork detail */
+.zoom-controls,
+.nav-btn,
+.btn,
+button,
+.collection-nav-btn,
+.collection-artwork:hover,
+.artwork-image,
+.image-viewport img,
+#artwork-image {
+    /* Remove transform restrictions to allow zoom functionality */
+    transition: initial !important;
+    will-change: initial !important;
+}
+
 html {
     font-size: 16px;
     scroll-behavior: smooth;
@@ -147,14 +190,7 @@ a:hover {
     object-fit: cover;
     border-radius: 12px;
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-    transition: all 0.3s ease;
     border: 2px solid rgba(255, 255, 255, 0.1);
-}
-
-.artist-portrait:hover {
-    transform: scale(1.02);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .hero-text {

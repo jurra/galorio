@@ -16,23 +16,87 @@ const projectRoot = path.dirname(__dirname);
 console.log('🎨 Building Art Portfolio Static...\n');
 
 /**
- * Parse CSV file
+ * Parse CSV file with proper handling of quoted fields and multiline content
  */
 function parseCSV(csvText) {
     const lines = csvText.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim());
+    const headers = parseCSVLine(lines[0]);
     const data = [];
-
-    for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim());
-        const row = {};
-        headers.forEach((header, index) => {
-            row[header] = values[index] || '';
-        });
-        data.push(row);
+    
+    let i = 1;
+    while (i < lines.length) {
+        const { values, nextLineIndex } = parseCSVRecord(lines, i);
+        if (values && values.length > 0 && values.some(v => v.trim())) {
+            const row = {};
+            headers.forEach((header, index) => {
+                row[header] = values[index] || '';
+            });
+            data.push(row);
+        }
+        i = nextLineIndex;
     }
 
     return data;
+}
+
+/**
+ * Parse a single CSV line, handling quoted fields
+ */
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    let i = 0;
+    
+    while (i < line.length) {
+        const char = line[i];
+        
+        if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+                // Escaped quote
+                current += '"';
+                i += 2;
+            } else {
+                // Toggle quote state
+                inQuotes = !inQuotes;
+                i++;
+            }
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+            i++;
+        } else {
+            current += char;
+            i++;
+        }
+    }
+    
+    result.push(current.trim());
+    return result;
+}
+
+/**
+ * Parse a CSV record that might span multiple lines
+ */
+function parseCSVRecord(lines, startIndex) {
+    let record = lines[startIndex];
+    let currentIndex = startIndex;
+    
+    // Count quotes to determine if record is complete
+    let quoteCount = (record.match(/"/g) || []).length;
+    
+    // If odd number of quotes, the record continues on next lines
+    while (quoteCount % 2 !== 0 && currentIndex + 1 < lines.length) {
+        currentIndex++;
+        record += '\n' + lines[currentIndex];
+        quoteCount += (lines[currentIndex].match(/"/g) || []).length;
+    }
+    
+    const values = parseCSVLine(record);
+    return {
+        values,
+        nextLineIndex: currentIndex + 1
+    };
 }
 
 /**

@@ -14,6 +14,11 @@ let zoomLevel = 1 ;
 let isDragging = false;
 let dragStart = { x: 0, y: 0 };
 let imageOffset = { x: 0, y: 0 };
+let velocity = { x: 0, y: 0 };
+let lastDragTime = 0;
+let lastDragPosition = { x: 0, y: 0 };
+let animationFrameId = null;
+let momentumAnimationId = null;
 
 // Initialize the artwork detail page
 document.addEventListener('DOMContentLoaded', async function() {
@@ -36,6 +41,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     } catch (error) {
         console.error('Error initializing artwork detail page:', error);
         showErrorState('Failed to load artwork data');
+    }
+});
+
+// Cleanup animations on page unload
+window.addEventListener('beforeunload', () => {
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+    }
+    if (momentumAnimationId) {
+        cancelAnimationFrame(momentumAnimationId);
     }
 });
 
@@ -254,14 +269,38 @@ function setupZoomControls() {
     
     if (zoomInBtn) {
         zoomInBtn.addEventListener('click', () => {
+            // Cancel any ongoing momentum animation
+            if (momentumAnimationId) {
+                cancelAnimationFrame(momentumAnimationId);
+                momentumAnimationId = null;
+                velocity = { x: 0, y: 0 };
+            }
+            
             zoomLevel = Math.min(zoomLevel * 1.3, 5);
+            imageOffset = constrainImagePosition(imageOffset);
             applyZoom();
         });
     }
     
     if (zoomOutBtn) {
         zoomOutBtn.addEventListener('click', () => {
-            zoomLevel = Math.max(zoomLevel / 1.3, 0.5);
+            // Cancel any ongoing momentum animation
+            if (momentumAnimationId) {
+                cancelAnimationFrame(momentumAnimationId);
+                momentumAnimationId = null;
+                velocity = { x: 0, y: 0 };
+            }
+            
+            const newZoomLevel = Math.max(zoomLevel / 1.3, 0.5);
+            
+            // If zooming out to 1 or less, reset offset
+            if (newZoomLevel <= 1) {
+                imageOffset = { x: 0, y: 0 };
+            } else {
+                imageOffset = constrainImagePosition(imageOffset);
+            }
+            
+            zoomLevel = newZoomLevel;
             applyZoom();
         });
     }
@@ -275,19 +314,40 @@ function setupZoomControls() {
     if (imageViewport) {
         imageViewport.addEventListener('wheel', (e) => {
             e.preventDefault();
+            
+            // Cancel any ongoing momentum animation
+            if (momentumAnimationId) {
+                cancelAnimationFrame(momentumAnimationId);
+                momentumAnimationId = null;
+                velocity = { x: 0, y: 0 };
+            }
+            
             const delta = e.deltaY < 0 ? 1.1 : 0.9;
-            zoomLevel = Math.max(0.5, Math.min(5, zoomLevel * delta));
+            const newZoomLevel = Math.max(0.5, Math.min(5, zoomLevel * delta));
+            
+            // If zooming out and going to 1, reset offset
+            if (newZoomLevel <= 1) {
+                imageOffset = { x: 0, y: 0 };
+                velocity = { x: 0, y: 0 };
+            } else {
+                // Constrain offset when zooming
+                imageOffset = constrainImagePosition(imageOffset);
+            }
+            
+            zoomLevel = newZoomLevel;
             applyZoom();
         });
     }
 }
 
 /**
- * Apply zoom transformation with proper centering
+ * Apply zoom transformation with proper centering and cursor updates
  */
 function applyZoom() {
     const artworkImage = document.getElementById('artwork-image');
-    if (artworkImage) {
+    const imageViewport = document.querySelector('.image-viewport');
+    
+    if (artworkImage && imageViewport) {
         const transform = [];
         
         // Apply zoom scale
@@ -301,15 +361,38 @@ function applyZoom() {
         }
         
         artworkImage.style.transform = transform.join(' ');
+        
+        // Update cursor state based on zoom level
+        imageViewport.setAttribute('data-zoom', zoomLevel.toString());
     }
 }
 
 /**
- * Reset zoom to default and center image
+ * Reset zoom to default and center image with smooth animation
  */
 function resetZoom() {
+    const artworkImage = document.getElementById('artwork-image');
+    
+    // Cancel any ongoing animations
+    if (momentumAnimationId) {
+        cancelAnimationFrame(momentumAnimationId);
+        momentumAnimationId = null;
+    }
+    
+    // Add smooth transition class
+    if (artworkImage) {
+        artworkImage.classList.add('zooming');
+        
+        // Remove transition class after animation
+        setTimeout(() => {
+            artworkImage.classList.remove('zooming');
+        }, 300);
+    }
+    
     zoomLevel = 1;
     imageOffset = { x: 0, y: 0 };
+    velocity = { x: 0, y: 0 };
+    
     centerImage();
 }
 
@@ -334,8 +417,8 @@ function centerImage() {
         const containerHeight = imageViewport.clientHeight;
         
         // Calculate scale to fit image while maintaining aspect ratio
-        const scaleX = (containerWidth * 2.5) / naturalWidth;
-        const scaleY = (containerHeight * 2.5) / naturalHeight;
+        const scaleX = (containerWidth * 4) / naturalWidth;
+        const scaleY = (containerHeight * 4) / naturalHeight;
         const scale = Math.min(scaleX, scaleY, 1); // Don't scale up beyond natural size
         
         // Apply the scale if needed
@@ -346,7 +429,7 @@ function centerImage() {
 }
 
 /**
- * Setup image panning/dragging
+ * Setup image panning/dragging with improved smoothness and momentum
  */
 function setupImagePanning() {
     const imageViewport = document.querySelector('.image-viewport');
@@ -358,44 +441,192 @@ function setupImagePanning() {
     artworkImage.addEventListener('mousedown', startDrag);
     document.addEventListener('mousemove', drag);
     document.addEventListener('mouseup', endDrag);
+    document.addEventListener('mouseleave', endDrag);
     
     // Touch events for mobile
-    artworkImage.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        startDrag({ clientX: touch.clientX, clientY: touch.clientY });
-    });
+    artworkImage.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener('touchcancel', handleTouchEnd);
     
-    document.addEventListener('touchmove', (e) => {
-        if (isDragging) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            drag({ clientX: touch.clientX, clientY: touch.clientY });
-        }
-    });
-    
-    document.addEventListener('touchend', endDrag);
+    // Prevent context menu on long press
+    artworkImage.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
 function startDrag(e) {
-    if (zoomLevel > 1) {
-        isDragging = true;
-        dragStart = { x: e.clientX - imageOffset.x, y: e.clientY - imageOffset.y };
-        document.querySelector('.image-viewport').classList.add('dragging');
+    if (zoomLevel <= 1) return;
+    
+    isDragging = true;
+    lastDragTime = Date.now();
+    
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    
+    dragStart = { 
+        x: clientX - imageOffset.x, 
+        y: clientY - imageOffset.y 
+    };
+    
+    lastDragPosition = { x: clientX, y: clientY };
+    velocity = { x: 0, y: 0 };
+    
+    // Cancel any ongoing momentum animation
+    if (momentumAnimationId) {
+        cancelAnimationFrame(momentumAnimationId);
+        momentumAnimationId = null;
     }
+    
+    document.querySelector('.image-viewport').classList.add('dragging');
+    
+    // Prevent text selection while dragging
+    document.body.style.userSelect = 'none';
 }
 
 function drag(e) {
-    if (isDragging && zoomLevel > 1) {
-        imageOffset.x = e.clientX - dragStart.x;
-        imageOffset.y = e.clientY - dragStart.y;
-        applyZoom();
+    if (!isDragging || zoomLevel <= 1) return;
+    
+    e.preventDefault();
+    
+    const currentTime = Date.now();
+    const timeDelta = currentTime - lastDragTime;
+    
+    if (timeDelta > 0) {
+        // Calculate velocity for momentum
+        velocity.x = (e.clientX - lastDragPosition.x) / timeDelta * 16; // Normalize to 60fps
+        velocity.y = (e.clientY - lastDragPosition.y) / timeDelta * 16;
     }
+    
+    // Update position
+    const newOffset = {
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+    };
+    
+    // Apply boundary constraints
+    const constrainedOffset = constrainImagePosition(newOffset);
+    imageOffset = constrainedOffset;
+    
+    // Update position with RAF for smoother animation
+    if (!animationFrameId) {
+        animationFrameId = requestAnimationFrame(() => {
+            applyZoom();
+            animationFrameId = null;
+        });
+    }
+    
+    lastDragTime = currentTime;
+    lastDragPosition = { x: e.clientX, y: e.clientY };
 }
 
 function endDrag() {
+    if (!isDragging) return;
+    
     isDragging = false;
     document.querySelector('.image-viewport')?.classList.remove('dragging');
+    document.body.style.userSelect = '';
+    
+    // Apply momentum if velocity is significant
+    const velocityMagnitude = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+    if (velocityMagnitude > 0.5) {
+        applyMomentum();
+    }
+}
+
+/**
+ * Apply momentum animation after drag ends
+ */
+function applyMomentum() {
+    const friction = 0.92; // Friction coefficient
+    const minVelocity = 0.1; // Minimum velocity before stopping
+    
+    function momentumStep() {
+        // Apply friction
+        velocity.x *= friction;
+        velocity.y *= friction;
+        
+        // Update position
+        const newOffset = {
+            x: imageOffset.x + velocity.x,
+            y: imageOffset.y + velocity.y
+        };
+        
+        // Apply boundary constraints
+        const constrainedOffset = constrainImagePosition(newOffset);
+        imageOffset = constrainedOffset;
+        
+        // Apply the transform
+        applyZoom();
+        
+        // Continue animation if velocity is still significant
+        const velocityMagnitude = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+        if (velocityMagnitude > minVelocity) {
+            momentumAnimationId = requestAnimationFrame(momentumStep);
+        } else {
+            momentumAnimationId = null;
+            velocity = { x: 0, y: 0 };
+        }
+    }
+    
+    momentumAnimationId = requestAnimationFrame(momentumStep);
+}
+
+/**
+ * Constrain image position to prevent dragging outside viewable area
+ */
+function constrainImagePosition(offset) {
+    const artworkImage = document.getElementById('artwork-image');
+    const imageViewport = document.querySelector('.image-viewport');
+    
+    if (!artworkImage || !imageViewport || zoomLevel <= 1) {
+        return { x: 0, y: 0 };
+    }
+    
+    const imageRect = artworkImage.getBoundingClientRect();
+    const viewportRect = imageViewport.getBoundingClientRect();
+    
+    // Calculate scaled image dimensions
+    const scaledWidth = imageRect.width * zoomLevel;
+    const scaledHeight = imageRect.height * zoomLevel;
+    
+    // Calculate maximum allowed offsets
+    const maxOffsetX = Math.max(0, (scaledWidth - viewportRect.width) / 2);
+    const maxOffsetY = Math.max(0, (scaledHeight - viewportRect.height) / 2);
+    
+    // Constrain offset within bounds
+    const constrainedOffset = {
+        x: Math.max(-maxOffsetX, Math.min(maxOffsetX, offset.x)),
+        y: Math.max(-maxOffsetY, Math.min(maxOffsetY, offset.y))
+    };
+    
+    return constrainedOffset;
+}
+
+/**
+ * Enhanced touch event handlers
+ */
+function handleTouchStart(e) {
+    if (e.touches.length === 1) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        startDrag({ clientX: touch.clientX, clientY: touch.clientY });
+    }
+}
+
+function handleTouchMove(e) {
+    if (isDragging && e.touches.length === 1) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        drag({ 
+            clientX: touch.clientX, 
+            clientY: touch.clientY,
+            preventDefault: () => {}
+        });
+    }
+}
+
+function handleTouchEnd(e) {
+    e.preventDefault();
+    endDrag();
 }
 
 /**
