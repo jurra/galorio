@@ -1,0 +1,31 @@
+{
+  "name": "art-portfolio-static",
+  "version": "1.0.0",
+  "description": "A customizable static art portfolio that auto-populates from image metadata",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "python3 -m http.server 8080",
+    "preview": "python3 -m http.server 8080 --directory dist",
+    "build": "rollup -c",
+    "build:metadata": "node scripts/build.js"
+  },
+  "keywords": [
+    "art",
+    "portfolio",
+    "static",
+    "gallery",
+    "photography"
+  ],
+  "author": "Artist Portfolio",
+  "license": "MIT",
+  "devDependencies": {
+    "csvtojson": "^2.0.10",
+    "rollup": "^4.9.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-postcss": "^4.0.2"
+  }
+}

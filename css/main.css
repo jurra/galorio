@@ -1,0 +1,705 @@
+/**
+ * Main Stylesheet
+ * Base styles, typography, and layout
+ */
+
+/* CSS Reset and Base Styles */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Specific overrides for GALLERY images only - NOT artwork detail */
+/* Only target images that are specifically inside gallery containers */
+.collections-container .collection-artwork img,
+.collections-container .single-collection-artwork img,
+.collections-container .gallery-item img {
+    transform: none !important;
+    transition: none !important;
+    will-change: auto !important;
+    scale: none !important;
+    zoom: normal !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+}
+
+/* Ensure artwork detail images can transform properly for zoom */
+.artwork-detail img,
+.image-viewport img,
+#artwork-image,
+.artwork-image {
+    /* Remove transform restrictions to allow zoom functionality */
+    transition: initial !important;
+    will-change: initial !important;
+    scale: initial !important;
+    zoom: initial !important;
+}
+
+/* Allow transforms on interactive elements and artwork detail */
+.zoom-controls,
+.nav-btn,
+.btn,
+button,
+.collection-nav-btn,
+.collection-artwork:hover,
+.artwork-image,
+.image-viewport img,
+#artwork-image {
+    /* Remove transform restrictions to allow zoom functionality */
+    transition: initial !important;
+    will-change: initial !important;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #fafafa;
+    min-height: 100vh;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 0.5em;
+}
+
+h1 {
+    font-size: 2rem;
+}
+
+h2 {
+    font-size: 1.75rem;
+}
+
+h3 {
+    font-size: 1.5rem;
+}
+
+p {
+    margin-bottom: 1rem;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: #0056b3;
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header */
+.header {
+    background: #2a2a2a;
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Navigation */
+.nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.nav-item {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1rem;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    text-transform: capitalize;
+}
+
+.nav-item:not(:last-child)::after {
+    content: '|';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.3);
+    font-weight: 300;
+}
+
+.nav-item:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-item.active {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Hero Section - Now with its own dark background */
+.hero-section {
+    background: #2a2a2a;
+    padding: 3rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 4rem;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.hero-image {
+    position: relative;
+}
+
+.artist-portrait {
+    width: 100%;
+    height: 350px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.hero-text {
+    color: white;
+}
+
+.hero-title {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 2.5rem;
+    font-weight: 500;
+    color: white;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    letter-spacing: 0.5px;
+}
+
+.hero-description {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 2rem;
+    letter-spacing: 0.3px;
+}
+
+.hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    letter-spacing: 0.3px;
+}
+
+.hero-cta:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateX(3px);
+}
+
+.nav-controls {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Typography - Apply artistic font family globally */
+/* Typography - Apply artistic font family globally */
+body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    line-height: 1.6;
+    color: #333;
+    background: #fafafa;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+}
+
+p, span, div {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    letter-spacing: 0.2px;
+}
+
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 8px 40px 8px 16px;
+    color: white;
+    font-size: 0.9rem;
+    width: 200px;
+    transition: all 0.3s ease;
+}
+
+.search-input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.search-input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+    width: 250px;
+}
+
+.search-btn {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    transition: color 0.2s ease;
+}
+
+.search-btn:hover {
+    color: white;
+}
+
+/* User Avatar */
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #007bff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Main Content */
+.main {
+    padding: 1rem 0;
+}
+
+/* Artist Info Section */
+.artist-info {
+    margin-bottom: 3rem;
+}
+
+.artist-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2rem;
+    align-items: start;
+    margin-bottom: 2rem;
+}
+
+.artist-photo {
+    width: 120px;
+    height: 120px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+.artist-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.artist-details {
+    max-width: 400px;
+}
+
+.artist-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+    color: #2c2c2c;
+}
+
+.artist-location {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.artist-bio {
+    margin-bottom: 1.5rem;
+}
+
+.artist-bio p {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+/* Social Links */
+.social-links {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: #f5f5f5;
+    border-radius: 50%;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.social-link:hover {
+    background: #007bff;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Contact Button */
+.contact-btn {
+    background: transparent;
+    border: 2px solid #ddd;
+    border-radius: 20px;
+    padding: 8px 24px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #666;
+}
+
+.contact-btn:hover {
+    border-color: #007bff;
+    color: #007bff;
+}
+
+/* Portfolio Header */
+.portfolio-header {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #eee;
+}
+
+.portfolio-header h2 {
+    font-size: 1.75rem;
+    color: #2c2c2c;
+    margin-bottom: 0;
+}
+
+/* Collection Filters */
+.filters-section {
+    margin-bottom: 2rem;
+}
+
+.collection-filters {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    background: transparent;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #666;
+}
+
+.filter-btn:hover {
+    border-color: #007bff;
+    color: #007bff;
+}
+
+.filter-btn.active {
+    background: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+/* Loading States */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.empty-state,
+.error-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #666;
+}
+
+.empty-state h3,
+.error-state h3 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.retry-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    transition: background-color 0.2s ease;
+}
+
+.retry-btn:hover {
+    background: #0056b3;
+}
+
+/* Footer */
+.footer {
+    background: #f8f9fa;
+    color: #666;
+    text-align: center;
+    padding: 2rem 0;
+    margin-top: 4rem;
+    border-top: 1px solid #eee;
+}
+
+.footer-content p {
+    margin: 0.25rem 0;
+    font-size: 0.85rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 16px;
+    }
+    
+    .artist-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .artist-photo {
+        justify-self: center;
+    }
+    
+    .search-input {
+        width: 150px;
+    }
+    
+    .search-input:focus {
+        width: 180px;
+    }
+    
+    .collection-filters {
+        justify-content: center;
+    }
+    
+    .nav-controls {
+        gap: 0.5rem;
+        position: static;
+        transform: none;
+    }
+    
+    .nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0;
+    }
+    
+    .nav-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .nav-item:not(:last-child)::after {
+        display: none;
+    }
+    
+    .nav-item + .nav-item {
+        border-left: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .hero-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+        padding: 0 1rem;
+    }
+    
+    .hero-image {
+        justify-self: center;
+        order: -1;
+    }
+    
+    .artist-portrait {
+        width: 280px;
+        height: 280px;
+        margin: 0 auto;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-description {
+        font-size: 1rem;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-description {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .main {
+        padding: 1rem 0;
+    }
+    
+    .artist-info {
+        margin-bottom: 2rem;
+    }
+    
+    .portfolio-header {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+    }
+    
+    .collection-filters {
+        gap: 0.5rem;
+    }
+    
+    .filter-btn {
+        padding: 6px 16px;
+        font-size: 0.85rem;
+    }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .artist-photo,
+    .user-avatar {
+        image-rendering: -webkit-optimize-contrast;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+/* Focus Styles */
+button:focus,
+input:focus,
+.filter-btn:focus,
+.social-link:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+    .header,
+    .footer,
+    .filters-section {
+        display: none;
+    }
+    
+    .main {
+        padding: 0;
+    }
+    
+    .artist-card {
+        break-inside: avoid;
+    }
+}

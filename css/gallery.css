@@ -1,0 +1,438 @@
+/**
+ * Gallery Stylesheet
+ * Styles for the artwork gallery, grid layout, and hover effects
+ */
+
+/* Gallery Container */
+.gallery-section {
+    margin-bottom: 4rem;
+}
+
+.gallery-container {
+    width: 100%;
+}
+
+/* Gallery Grid */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 0;
+}
+
+/* Gallery Items */
+.gallery-item {
+    position: relative;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    aspect-ratio: 1;
+}
+
+.gallery-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Image Container */
+.image-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover .image-container img {
+    transform: scale(1.05);
+}
+
+/* Artwork Overlay */
+.artwork-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.8) 0%,
+        rgba(0, 0, 0, 0.6) 50%,
+        transparent 100%
+    );
+    color: white;
+    padding: 20px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover .artwork-overlay {
+    transform: translateY(0);
+}
+
+/* Artwork Details */
+.artwork-details {
+    position: relative;
+    z-index: 2;
+}
+
+.artwork-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: white;
+    line-height: 1.3;
+}
+
+.artwork-medium {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 0.25rem;
+    font-style: italic;
+}
+
+.artwork-dimensions {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 0.5rem;
+}
+
+.artwork-price {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #4CAF50;
+    margin-bottom: 0.5rem;
+}
+
+/* Availability Status */
+.availability-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.availability-status.available {
+    background: #4CAF50;
+    color: white;
+}
+
+.availability-status.sold {
+    background: #f44336;
+    color: white;
+}
+
+/* Alternative overlay style for better readability */
+.gallery-item.overlay-style-card .artwork-overlay {
+    background: rgba(255, 255, 255, 0.95);
+    color: #333;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.gallery-item.overlay-style-card .artwork-title {
+    color: #333;
+}
+
+.gallery-item.overlay-style-card .artwork-medium {
+    color: #666;
+}
+
+.gallery-item.overlay-style-card .artwork-dimensions {
+    color: #777;
+}
+
+/* Lightbox */
+.lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.lightbox.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.lightbox.active .lightbox-content {
+    transform: scale(1);
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.lightbox-close:hover {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.lightbox-image {
+    width: 100%;
+    height: auto;
+    max-height: 70vh;
+    object-fit: contain;
+    display: block;
+}
+
+.lightbox-details {
+    padding: 20px;
+    background: white;
+}
+
+.lightbox-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.lightbox-info {
+    color: #666;
+    margin: 0;
+}
+
+/* Grid Responsiveness */
+@media (max-width: 1200px) {
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 18px;
+    }
+}
+
+@media (max-width: 768px) {
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
+    }
+    
+    .artwork-overlay {
+        padding: 16px;
+    }
+    
+    .artwork-title {
+        font-size: 1.1rem;
+    }
+    
+    .lightbox-content {
+        max-width: 95vw;
+        max-height: 95vh;
+    }
+    
+    .lightbox-details {
+        padding: 16px;
+    }
+    
+    .lightbox-title {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 12px;
+    }
+    
+    .gallery-item {
+        border-radius: 6px;
+    }
+    
+    .artwork-overlay {
+        padding: 12px;
+    }
+    
+    .artwork-title {
+        font-size: 1rem;
+    }
+    
+    .artwork-medium,
+    .artwork-dimensions {
+        font-size: 0.8rem;
+    }
+    
+    .artwork-price {
+        font-size: 0.9rem;
+    }
+    
+    .availability-status {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+}
+
+/* Large Screens */
+@media (min-width: 1400px) {
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 24px;
+    }
+}
+
+/* Masonry-style layout option */
+.gallery-grid.masonry {
+    column-count: auto;
+    column-width: 280px;
+    column-gap: 20px;
+}
+
+.gallery-grid.masonry .gallery-item {
+    display: inline-block;
+    width: 100%;
+    margin-bottom: 20px;
+    break-inside: avoid;
+    aspect-ratio: auto;
+}
+
+/* Alternative card style */
+.gallery-item.card-style {
+    aspect-ratio: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.gallery-item.card-style .image-container {
+    flex: 1;
+    min-height: 200px;
+}
+
+.gallery-item.card-style .artwork-overlay {
+    position: static;
+    background: white;
+    color: #333;
+    transform: none;
+    transition: none;
+    padding: 16px;
+    border-top: 1px solid #eee;
+}
+
+.gallery-item.card-style .artwork-title {
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.gallery-item.card-style .artwork-medium {
+    color: #666;
+}
+
+.gallery-item.card-style .artwork-dimensions {
+    color: #777;
+}
+
+/* Featured artwork highlight */
+.gallery-item.featured {
+    position: relative;
+}
+
+.gallery-item.featured::before {
+    content: "Featured";
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: #FF6B35;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 3;
+}
+
+/* Loading placeholder */
+.gallery-item.loading {
+    background: #f0f0f0;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.gallery-item.loading .image-container {
+    background: #e0e0e0;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Error state for individual items */
+.gallery-item.error .image-container {
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 0.9rem;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .gallery-item {
+        border: 2px solid #333;
+    }
+    
+    .artwork-overlay {
+        background: rgba(0, 0, 0, 0.9);
+    }
+    
+    .availability-status.available {
+        background: #000;
+        border: 2px solid #4CAF50;
+    }
+    
+    .availability-status.sold {
+        background: #000;
+        border: 2px solid #f44336;
+    }
+}
