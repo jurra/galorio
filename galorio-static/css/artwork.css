@@ -3,8 +3,8 @@
 /* Main Container */
 .artwork-container {
     display: grid;
-    grid-template-columns: 1fr 400px;
-    gap: 2rem;
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
     height: calc(100vh - 120px);
     padding: 1rem 0;
     max-width: 1400px;
@@ -164,7 +164,7 @@
 
 /* Right Side: Information Section */
 .artwork-info-section {
-    padding: 2rem;
+    padding: 1.5rem;
     background: white;
     border-radius: 12px;
     border: 1px solid #e0e0e0;
@@ -172,12 +172,12 @@
 }
 
 .artwork-header {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .artwork-title {
     font-family: 'Georgia', serif;
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: normal;
     margin: 0 0 0.5rem 0;
     color: #1a1a1a;
@@ -185,7 +185,7 @@
 }
 
 .artwork-artist {
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: #666;
     margin: 0;
     font-style: italic;
@@ -199,7 +199,7 @@
 .metadata-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .metadata-item {
@@ -209,7 +209,7 @@
 }
 
 .metadata-item label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: #999;
     text-transform: uppercase;
@@ -217,14 +217,14 @@
 }
 
 .metadata-item span {
-    font-size: 0.95rem;
+    font-size: 0.875rem;
     color: #333;
 }
 
 /* Description */
 .artwork-description {
-    margin-bottom: 2rem;
-    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
     background: #f9f9f9;
     border-radius: 8px;
     border-left: 4px solid #e0e0e0;
@@ -239,8 +239,8 @@
 
 /* Pricing Section */
 .pricing-section {
-    margin-bottom: 2rem;
-    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
     background: #f8f9fa;
     border-radius: 8px;
 }
@@ -252,7 +252,7 @@
 }
 
 .price {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: #2E7D32;
 }
@@ -276,7 +276,7 @@
 }
 
 .btn {
-    padding: 0.875rem 1.5rem;
+    padding: 0.75rem 1.25rem;
     border-radius: 6px;
     font-weight: 600;
     text-transform: uppercase;
@@ -284,7 +284,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     border: none;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
 }
 
 .btn-outline {

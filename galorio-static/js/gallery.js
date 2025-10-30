@@ -563,18 +563,6 @@ export class Gallery {
             overlay.appendChild(pricing);
         }
 
-        // Availability status
-        const status = document.createElement('span');
-        status.className = 'collection-artwork-status';
-        if (artwork.available === false || artwork.available === 'false') {
-            status.textContent = 'Sold';
-            status.classList.add('sold');
-        } else {
-            status.textContent = 'Available';
-            status.classList.add('available');
-        }
-        overlay.appendChild(status);
-
         artworkElement.appendChild(image);
         artworkElement.appendChild(overlay);
 
