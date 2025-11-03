@@ -30,15 +30,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
           
-      - name: Install dependencies
+      - name: Clear npm cache and install dependencies
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+          npm cache clean --force
+          rm -rf node_modules package-lock.json
+          npm install
         
       - name: Build site
         run: npm run build
