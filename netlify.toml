@@ -4,10 +4,21 @@
   
   # Directory to publish (root directory since it's a static site)
   publish = "."
+
+# Enable Git LFS support
+[build.environment]
+  GIT_LFS_ENABLED = "true"
+  GIT_LFS_SKIP_SMUDGE = "false"
+
+# Git LFS settings
+[context.production.environment]
+  GIT_LFS_ENABLED = "true"
   
-  # Git LFS settings
-  [build.environment]
-    GIT_LFS_ENABLED = "true"
+[context.deploy-preview.environment]
+  GIT_LFS_ENABLED = "true"
+  
+[context.branch-deploy.environment]
+  GIT_LFS_ENABLED = "true"
 
 [build.processing]
   # Don't process these file types
