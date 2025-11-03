@@ -17,6 +17,53 @@ export class Gallery {
     }
 
     /**
+     * Generate thumbnail URL from original image URL
+     */
+    getThumbnailUrl(imageUrl) {
+        if (!imageUrl) return imageUrl;
+        
+        // Convert artworks/filename.jpg to artworks/thumbnails/filename-thumb.jpg
+        const pathParts = imageUrl.split('/');
+        const filename = pathParts[pathParts.length - 1];
+        const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
+        const directory = pathParts.slice(0, -1).join('/');
+        
+        return `${directory}/thumbnails/${nameWithoutExt}-thumb.jpg`;
+    }
+
+    /**
+     * Preload original image in the background and swap when ready
+     */
+    preloadOriginalImage(thumbnailImage, artworkId) {
+        const originalSrc = thumbnailImage.dataset.originalSrc;
+        if (!originalSrc) return;
+
+        console.log(`🔄 Background loading original for ${artworkId}: ${originalSrc}`);
+        
+        const originalImage = new Image();
+        originalImage.onload = () => {
+            console.log(`✅ Original loaded for ${artworkId}, swapping from thumbnail`);
+            // Smooth transition to original
+            thumbnailImage.style.transition = 'opacity 0.3s ease';
+            thumbnailImage.style.opacity = '0.7';
+            
+            setTimeout(() => {
+                thumbnailImage.src = originalSrc;
+                thumbnailImage.dataset.usingThumbnail = 'false';
+                thumbnailImage.style.opacity = '1';
+                thumbnailImage.style.transition = '';
+            }, 150);
+        };
+        
+        originalImage.onerror = () => {
+            console.warn(`⚠️ Failed to load original for ${artworkId}: ${originalSrc}`);
+            // Keep using thumbnail
+        };
+        
+        originalImage.src = originalSrc;
+    }
+
+    /**
      * Initialize the gallery with artworks and collections
      */
     async initialize() {
@@ -488,11 +535,18 @@ export class Gallery {
         artworkElement.className = 'collection-artwork';
         artworkElement.dataset.artworkId = artwork.id;
 
-        // Image
+        // Image - Start with thumbnail for fast loading
         const image = document.createElement('img');
-        image.src = artwork.imageUrl;
+        const thumbnailUrl = this.getThumbnailUrl(artwork.imageUrl);
+        
+        // Use thumbnail for initial fast display
+        image.src = thumbnailUrl;
         image.alt = artwork.title || 'Artwork';
         image.loading = 'lazy';
+        
+        // Store original URL for later loading
+        image.dataset.originalSrc = artwork.imageUrl;
+        image.dataset.usingThumbnail = 'true';
         
         // Aggressive reset and size control
         image.style.cssText = '';
@@ -527,9 +581,15 @@ export class Gallery {
                 naturalHeight: image.naturalHeight,
                 currentWidth: image.offsetWidth,
                 currentHeight: image.offsetHeight,
-                aspectRatio: image.naturalWidth / image.naturalHeight
+                aspectRatio: image.naturalWidth / image.naturalHeight,
+                usingThumbnail: image.dataset.usingThumbnail === 'true'
             });
             this.adjustArtworkDimensions(artworkElement, image, maxHeight);
+            
+            // If this is a thumbnail, start loading the original in the background
+            if (image.dataset.usingThumbnail === 'true' && image.dataset.originalSrc) {
+                this.preloadOriginalImage(image, artwork.id);
+            }
         };
 
         // Handle image load errors

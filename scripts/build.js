@@ -8,6 +8,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -618,6 +619,33 @@ function generateSitemap(portfolioData) {
 }
 
 /**
+ * Generate thumbnails for fast loading
+ */
+function generateThumbnails() {
+    console.log('\n🖼️  Generating thumbnails for fast loading...');
+    
+    try {
+        const thumbnailScript = path.join(projectRoot, 'scripts', 'generate-thumbnails.sh');
+        
+        // Check if ImageMagick is available
+        try {
+            execSync('which magick', { stdio: 'ignore' });
+        } catch (error) {
+            console.log('⚠️  ImageMagick not found - skipping thumbnail generation');
+            console.log('💡 Install ImageMagick: brew install imagemagick');
+            return;
+        }
+        
+        // Run thumbnail generation
+        execSync(`bash "${thumbnailScript}"`, { stdio: 'inherit' });
+        
+    } catch (error) {
+        console.log('⚠️  Thumbnail generation failed:', error.message);
+        console.log('💡 Continuing without thumbnails...');
+    }
+}
+
+/**
  * Main build function
  */
 async function main() {
@@ -625,6 +653,7 @@ async function main() {
         const portfolioData = await buildPortfolio();
         writePortfolioData(portfolioData);
         generateSitemap(portfolioData);
+        generateThumbnails();
         
         console.log('\n✨ Build completed successfully!');
         console.log('\n📋 Next steps:');
