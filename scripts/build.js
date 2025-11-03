@@ -38,6 +38,26 @@ function loadBuildConfig() {
 
 const BUILD_CONFIG = loadBuildConfig();
 
+// Check if portfolio.json already exists and is valid
+const portfolioJsonPath = path.join(projectRoot, 'data', 'portfolio.json');
+if (fs.existsSync(portfolioJsonPath)) {
+    try {
+        const existingData = JSON.parse(fs.readFileSync(portfolioJsonPath, 'utf8'));
+        if (existingData && existingData.meta && existingData.meta.totalArtworks > 0) {
+            console.log('✅ Existing portfolio.json found with data');
+            console.log(`📊 Data summary:
+   - ${existingData.meta.totalArtworks} artworks
+   - ${existingData.meta.collectionsCount} collections
+   - ${existingData.meta.featuredCount} featured artworks`);
+            console.log('\n🚀 Using existing portfolio data - skipping CSV processing');
+            console.log('💡 To regenerate from CSV, delete data/portfolio.json and run build:metadata');
+            process.exit(0);
+        }
+    } catch (error) {
+        console.log('⚠️ Existing portfolio.json found but invalid, regenerating...');
+    }
+}
+
 console.log('🎨 Building Art Portfolio Static...\n');
 console.log(`📋 Configuration:
    - Collection Order: ${BUILD_CONFIG.COLLECTION_ORDER}

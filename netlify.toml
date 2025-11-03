@@ -1,6 +1,6 @@
 [build]
-  # Build command
-  command = "npm run build:all"
+  # Build command - uses existing portfolio.json, no CSV processing needed
+  command = "npm run build"
   
   # Directory to publish (root directory since it's a static site)
   publish = "."
