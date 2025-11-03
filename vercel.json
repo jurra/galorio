@@ -1,0 +1,57 @@
+{
+  "version": 2,
+  "name": "galorio-art-portfolio",
+  "buildCommand": "npm run build:all",
+  "outputDirectory": ".",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "framework": null,
+  "public": true,
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  },
+  "env": {
+    "GIT_LFS_ENABLED": "1"
+  },
+  "build": {
+    "env": {
+      "GIT_LFS_ENABLED": "1"
+    }
+  },
+  "routes": [
+    {
+      "src": "/artwork/([^/]+)",
+      "dest": "/artwork.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/artworks/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
+  ]
+}

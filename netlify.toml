@@ -1,0 +1,44 @@
+[build]
+  # Build command
+  command = "npm run build:all"
+  
+  # Directory to publish (root directory since it's a static site)
+  publish = "."
+  
+  # Git LFS settings
+  [build.environment]
+    GIT_LFS_ENABLED = "true"
+
+[build.processing]
+  # Don't process these file types
+  skip_processing = false
+
+[build.processing.images]
+  # Don't optimize images automatically (we have originals)
+  compress = false
+
+# Redirect rules for SPA
+[[redirects]]
+  from = "/artwork/*"
+  to = "/artwork.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 404
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Image optimization for web delivery
+[[headers]]
+  for = "/artworks/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
