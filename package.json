@@ -10,7 +10,8 @@
     "build": "rollup -c",
     "build:metadata": "node scripts/build.js",
     "setup": "cp config/artwork-inventory.example.csv config/artwork-inventory.csv && cp config/collections.example.csv config/collections.csv && echo '✅ Example CSV files copied! Edit them with your actual data.'",
-    "build:all": "npm run build:metadata && npm run build"
+    "build:all": "npm run build:metadata && npm run build",
+    "deploy": "npm run build:all && echo '✅ Build complete! Push to GitHub to deploy.'"
   },
   "keywords": [
     "art",

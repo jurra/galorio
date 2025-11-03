@@ -1,93 +1,131 @@
-# Art Portfolio - Static
+# Art Portfolio Static
 
-A customizable static art portfolio website that automatically populates from image folders with metadata.
+A customizable static art portfolio that auto-populates from image metadata with responsive design and mobile navigation.
 
 ## Features
 
-- 🎨 **Automatic Image Discovery** - Scans image folders and loads metadata
-- 📋 **CSV Configuration** - Control artwork order and create collections
-- 📱 **Responsive Design** - Works on all devices
-- ✨ **Hover Effects** - Reveal artwork details on hover
-- 🔗 **Individual Pages** - Detailed view for each artwork
-- 🏷️ **Collections Support** - Organize artworks into groups
-- 🚀 **Static Hosting Ready** - Deploy to GitHub Pages, Netlify, Vercel
+- 📱 **Responsive Design**: Mobile-first approach with hamburger navigation
+- 🎨 **Dynamic Gallery**: Auto-generates from CSV configuration
+- 🔍 **Search & Filter**: Find artworks by title, description, or tags
+- �️ **Image Zoom**: Interactive zoom functionality for detailed viewing
+- 📊 **Collection Organization**: Group artworks into custom collections
+- 🎯 **Smooth Interactions**: Drag, zoom, and navigate with smooth animations
+- ♿ **Accessibility**: ARIA attributes and keyboard navigation support
 
 ## Quick Start
 
-1. Add your artwork images to the `artworks/` folder
-2. Create metadata files (JSON) for each image
-3. Optionally configure collections in `config/collections.csv`
-4. Open `index.html` in your browser
+1. **Clone and Install**:
+   ```bash
+   git clone <your-repo-url>
+   cd galorio-static
+   npm install
+   ```
 
-## Folder Structure
+2. **Setup Your Data**:
+   ```bash
+   npm run setup  # Creates example CSV files
+   ```
 
-```
-├── index.html              # Main gallery page
-├── artwork.html            # Individual artwork template
-├── css/
-│   ├── main.css           # Main styles
-│   ├── gallery.css        # Gallery grid styles
-│   └── artwork.css        # Individual artwork styles
-├── js/
-│   ├── main.js           # Main application logic
-│   ├── metadata.js       # Metadata processing
-│   └── gallery.js        # Gallery functionality
-├── artworks/             # Your artwork images
-│   ├── painting1.jpg
-│   ├── painting1.json    # Metadata for painting1.jpg
-│   └── ...
-├── config/
-│   └── collections.csv   # Collections and ordering
-└── data/
-    └── portfolio.json    # Generated portfolio data
-```
+3. **Add Your Content**:
+   - Add artwork images to `artworks/` folder
+   - Edit `config/artwork-inventory.csv` with your artwork details
+   - Edit `config/collections.csv` to organize your collections
 
-## Metadata Format
-
-Create a JSON file for each artwork with the same name:
-
-```json
-{
-  "title": "Moonlight Reflection",
-  "medium": "Acrylic on canvas",
-  "dimensions": "24 x 36 inches",
-  "year": "2024",
-  "price": "$1,200",
-  "description": "A serene landscape capturing...",
-  "available": true,
-  "collection": "Landscapes",
-  "tags": ["landscape", "night", "water"]
-}
-```
-
-## CSV Configuration
-
-Use `config/collections.csv` to control ordering and collections:
-
-```csv
-filename,title,collection,order,featured
-painting1.jpg,Moonlight Reflection,Landscapes,1,true
-sculpture2.jpg,Abstract Form,Sculptures,2,false
-```
-
-## Development
-
-```bash
-# Start local server
-npm run dev
-
-# Build optimized version
-npm run build
-```
-
-Visit `http://localhost:8080` to view your portfolio.
+4. **Build and Preview**:
+   ```bash
+   npm run build:all  # Builds metadata and bundles JavaScript
+   npm run dev        # Starts local server at http://localhost:8080
+   ```
 
 ## Deployment
 
-This is a static website that can be deployed to:
-- GitHub Pages
-- Netlify
-- Vercel
-- Any static hosting service
+### GitHub Pages (Automatic)
 
-Simply upload the files or connect your repository.
+This project is configured for automatic deployment to GitHub Pages:
+
+1. **Push to GitHub**:
+   ```bash
+   git add .
+   git commit -m "Deploy portfolio"
+   git push origin main
+   ```
+
+2. **Enable GitHub Pages**:
+   - Go to your repository Settings
+   - Navigate to Pages section
+   - Source: "GitHub Actions"
+   - The workflow will automatically build and deploy
+
+3. **Access Your Site**:
+   - Your portfolio will be live at: `https://yourusername.github.io/repository-name`
+
+### Manual Deployment
+
+For other hosting services:
+
+```bash
+npm run deploy  # Builds everything ready for deployment
+```
+
+Then upload all files to your hosting provider.
+
+## Project Structure
+
+```
+galorio-static/
+├── index.html              # Main gallery page
+├── artwork.html            # Individual artwork viewer
+├── config/                 # CSV configuration files
+│   ├── artwork-inventory.csv    # Artwork metadata
+│   └── collections.csv          # Collection definitions
+├── artworks/               # Artwork image files (add your images here)
+├── css/                    # Stylesheets
+├── js/                     # JavaScript modules
+├── data/                   # Generated portfolio data
+└── dist/                   # Built JavaScript bundles
+```
+
+## Configuration
+
+### Artwork CSV Format
+
+The `config/artwork-inventory.csv` should include:
+- `title`: Artwork title
+- `image_path`: Filename in artworks/ folder
+- `description`: Artwork description
+- `collection`: Collection name
+- `featured`: true/false for homepage display
+- `tags`: Comma-separated tags for search
+
+### Collections CSV Format
+
+The `config/collections.csv` should include:
+- `name`: Collection display name
+- `description`: Collection description
+- `order`: Display order number
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build JavaScript bundles
+- `npm run build:metadata` - Generate portfolio data from CSV
+- `npm run build:all` - Build everything (metadata + bundles)
+- `npm run deploy` - Complete build for deployment
+- `npm run setup` - Copy example CSV files
+
+## Responsive Design
+
+The portfolio automatically adapts to different screen sizes:
+- **Desktop**: Full navigation bar with hover effects
+- **Tablet**: Responsive grid layouts
+- **Mobile**: Hamburger menu with touch-friendly interactions
+
+## Browser Support
+
+- Modern browsers (Chrome, Firefox, Safari, Edge)
+- Mobile browsers (iOS Safari, Chrome Mobile)
+- Progressive enhancement for older browsers
+
+## License
+
+MIT License - feel free to use for your own art portfolio!
