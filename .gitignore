@@ -26,8 +26,7 @@ artworks-web-backup/
 config/artwork-inventory.csv
 config/collections.csv
 
-# Generated data files (created during build)
-data/portfolio.json
+# Generated sitemap (can be regenerated)
 sitemap.xml
 
 # Build outputs - images will be copied here during build
