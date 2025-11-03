@@ -8,7 +8,9 @@
     "dev": "python3 -m http.server 8080",
     "preview": "python3 -m http.server 8080 --directory dist",
     "build": "rollup -c",
-    "build:metadata": "node scripts/build.js"
+    "build:metadata": "node scripts/build.js",
+    "setup": "cp config/artwork-inventory.example.csv config/artwork-inventory.csv && cp config/collections.example.csv config/collections.csv && echo '✅ Example CSV files copied! Edit them with your actual data.'",
+    "build:all": "npm run build:metadata && npm run build"
   },
   "keywords": [
     "art",

@@ -16,6 +16,14 @@ artworks/*.bmp
 !artworks/README.md
 !artworks/*.svg
 
+# CSV data files - only used for build, not committed
+config/artwork-inventory.csv
+config/collections.csv
+
+# Generated data files (created during build)
+data/portfolio.json
+sitemap.xml
+
 # Build outputs - images will be copied here during build
 dist/
 build/

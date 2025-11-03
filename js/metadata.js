@@ -18,9 +18,9 @@ export class MetadataProcessor {
         try {
             console.log('🎨 Initializing metadata processor...');
             await this.loadCSVConfig();
-            await this.loadCollectionsConfig();
-            await this.loadArtworkMetadata();
-            this.processCollections();
+            await this.loadCollectionsConfig(); // This loads fallback collections if needed
+            await this.loadArtworkMetadata(); // This now loads collections with nested artworks
+            // No need to call processCollections as data is already structured
             console.log(`✅ Metadata processor initialized with ${this.artworks.length} artworks and ${this.collections.size} collections`);
             return { artworks: this.artworks, collections: this.collections };
         } catch (error) {
@@ -65,14 +65,20 @@ export class MetadataProcessor {
                 this.collectionsConfig = this.parseCSV(csvText);
                 console.log(`✅ Loaded ${this.collectionsConfig.length} collections from CSV`);
                 
-                // Convert to Map for easy lookup
+                // Process the new CSV structure: Title, ID, Description, Notes
                 this.collectionsConfig.forEach(row => {
-                    this.collections.set(row.id, {
-                        id: row.id,
-                        name: row.collection_name,
-                        description: row.description,
-                        artworks: []
-                    });
+                    if (row.ID && row.Title) { // Only process rows with both ID and Title
+                        this.collections.set(row.ID, {
+                            id: row.ID,
+                            name: row.Title,
+                            description: row.Description || '',
+                            notes: row.Notes || '',
+                            artworks: []
+                        });
+                        console.log(`📁 Loaded collection: ${row.ID} - "${row.Title}" - Description: "${row.Description}"`);
+                    } else {
+                        console.log(`⚠️ Skipping invalid collection row:`, row);
+                    }
                 });
             } else {
                 console.log('❌ Collections CSV not found, creating default collections');
@@ -100,293 +106,172 @@ export class MetadataProcessor {
     }
 
     /**
-     * Parse CSV text into structured data
+     * Load artwork metadata from portfolio.json
+     */
+    async loadArtworkMetadata() {
+        try {
+            console.log('🖼️ Loading artwork metadata...');
+            const response = await fetch('./data/portfolio.json');
+            if (!response.ok) {
+                throw new Error(`Failed to load portfolio data: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Handle the new nested structure where collections contain artworks
+            if (data.collections) {
+                console.log('📁 Loading collections with nested artworks...');
+                
+                // Extract collections and their artworks
+                Object.values(data.collections).forEach(collection => {
+                    if (collection.artworks && collection.artworks.length > 0) {
+                        // Store collection metadata
+                        this.collections.set(collection.id, {
+                            id: collection.id,
+                            name: collection.name,
+                            description: collection.description || '',
+                            notes: collection.notes || '',
+                            artworks: collection.artworks
+                        });
+                        
+                        // Also add artworks to the main artworks array for backward compatibility
+                        this.artworks.push(...collection.artworks);
+                        
+                        console.log(`📚 Loaded collection "${collection.name}" with ${collection.artworks.length} artworks`);
+                    }
+                });
+                
+                console.log(`✅ Loaded ${this.artworks.length} total artworks from ${this.collections.size} collections`);
+            } else {
+                // Fallback for old structure
+                this.artworks = data.artworks || data;
+                
+                // Ensure each artwork has required properties
+                this.artworks = this.artworks.map(artwork => ({
+                    id: artwork.id,
+                    title: artwork.title || 'Untitled',
+                    collection: artwork.collection || 'uncategorized',
+                    imageUrl: artwork.imageUrl || `./artworks/${artwork.filename || artwork.id}.jpg`,
+                    description: artwork.description || '',
+                    dimensions: artwork.dimensions || '',
+                    medium: artwork.medium || '',
+                    pricing: artwork.pricing || '',
+                    notes: artwork.notes || '',
+                    featured: artwork.featured || false,
+                    available: artwork.available !== false,
+                    tags: artwork.tags || [],
+                    filename: artwork.filename || `${artwork.id}.jpg`,
+                    price: artwork.price || artwork.pricing || '',
+                    size: artwork.size || ''
+                }));
+                
+                console.log(`✅ Loaded ${this.artworks.length} artworks from legacy structure`);
+            }
+            
+        } catch (error) {
+            console.error('❌ Error loading artwork metadata:', error);
+            this.artworks = [];
+        }
+    }
+
+    /**
+     * Parse CSV text into array of objects
      */
     parseCSV(csvText) {
-        const lines = csvText.trim().split('\n');
-        const headers = lines[0].split(',').map(h => h.trim());
-        const data = [];
-
+        const lines = [];
+        let currentLine = '';
+        let inQuotes = false;
+        let i = 0;
+        
+        while (i < csvText.length) {
+            const char = csvText[i];
+            const nextChar = csvText[i + 1];
+            
+            if (char === '"' && !inQuotes) {
+                inQuotes = true;
+            } else if (char === '"' && inQuotes) {
+                if (nextChar === '"') {
+                    currentLine += '"';
+                    i++; // Skip the next quote
+                } else {
+                    inQuotes = false;
+                }
+            } else if (char === '\n' && !inQuotes) {
+                if (currentLine.trim()) {
+                    lines.push(currentLine.trim());
+                }
+                currentLine = '';
+            } else if (char === '\r' && nextChar === '\n' && !inQuotes) {
+                if (currentLine.trim()) {
+                    lines.push(currentLine.trim());
+                }
+                currentLine = '';
+                i++; // Skip the \n
+            } else {
+                currentLine += char;
+            }
+            i++;
+        }
+        
+        // Add the last line if it exists
+        if (currentLine.trim()) {
+            lines.push(currentLine.trim());
+        }
+        
+        if (lines.length === 0) return [];
+        
+        const headers = this.parseCSVLine(lines[0]);
+        const result = [];
+        
         for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].split(',').map(v => v.trim());
+            const values = this.parseCSVLine(lines[i]);
             const row = {};
+            
             headers.forEach((header, index) => {
                 row[header] = values[index] || '';
             });
-            data.push(row);
-        }
-
-        return data;
-    }
-
-    /**
-     * Load all artwork metadata from CSV data or pre-generated JSON
-     */
-    async loadArtworkMetadata() {
-        console.log('📁 Loading artwork metadata...');
-        
-        // First, try to load pre-generated portfolio data
-        try {
-            console.log('🔍 Trying to load pre-generated portfolio.json...');
-            const response = await fetch('./data/portfolio.json');
-            if (response.ok) {
-                const portfolioData = await response.json();
-                this.artworks = portfolioData.artworks || [];
-                console.log(`✅ Loaded ${this.artworks.length} artworks from pre-generated data`);
-                console.log('📋 First artwork:', this.artworks[0]);
-                return;
-            } else {
-                console.log(`❌ Failed to load portfolio.json: ${response.status} ${response.statusText}`);
-            }
-        } catch (error) {
-            console.log('❌ Error loading pre-generated portfolio data:', error);
-            console.log('🔄 Falling back to CSV processing...');
-        }
-
-        // Fallback to CSV processing
-        if (!this.csvConfig || this.csvConfig.length === 0) {
-            console.log('❌ No CSV data found');
-            return;
-        }
-
-        console.log(`📊 Processing ${this.csvConfig.length} rows from CSV...`);
-
-        // Process each row from CSV
-        this.csvConfig.forEach(row => {
-            // Map your CSV columns to artwork object
-            const artwork = {
-                id: row.ID || this.generateId(row.Title),
-                title: row.Title,
-                collection: row.Collection,
-                medium: row.Medium || '', // Add medium field
-                year: row.Year || '', // Add year field
-                pricing: row.Pricing,
-                dimensions: row.Dimensions || row['Dimensions'], // Handle both dimension columns
-                size: row.Size,
-                notes: row.Notes,
-                description: row['Extended description'] || '',
-                
-                // Generate image filename from ID if not provided
-                filename: this.generateImageFilename(row.ID, row.Title),
-                imageUrl: `./artworks/${this.generateImageFilename(row.ID, row.Title)}`,
-                
-                // Set availability based on presence of pricing or notes
-                available: !!(row.Pricing && row.x !== 'sold'),
-                
-                // Extract price from pricing column
-                price: this.extractPrice(row.Pricing),
-                
-                // Set featured status (you can customize this logic)
-                featured: row.x === 'x' || row.featured === 'true',
-                
-                // Generate tags from title and description
-                tags: this.generateTags(row.Title, row['Extended description']),
-                
-                // Initialize samples array (can be populated later)
-                samples: []
-            };
-
-            this.artworks.push(artwork);
-        });
-        
-        console.log(`✅ Loaded ${this.artworks.length} artworks from CSV`);
-    }
-
-    /**
-     * Process a CSV row into a complete artwork object
-     */
-    processCSVRow(row) {
-        // Convert CSV row to artwork object
-        const artwork = {
-            filename: row.filename,
-            imageUrl: `./artworks/${row.filename}`,
-            id: this.generateId(row.filename),
-            title: row.title || this.filenameToTitle(row.filename),
-            medium: row.medium || '',
-            dimensions: row.dimensions || '',
-            year: row.year || '',
-            price: row.price || 'Price on request',
-            description: row.description || '',
-            available: this.parseBoolean(row.available),
-            collection: row.collection || 'All',
-            order: row.order ? parseInt(row.order) : 999,
-            featured: this.parseBoolean(row.featured),
-            tags: this.parseTags(row.tags)
-        };
-
-        return artwork;
-    }
-
-    /**
-     * Parse boolean values from CSV (handles various formats)
-     */
-    parseBoolean(value) {
-        if (typeof value === 'boolean') return value;
-        if (typeof value === 'string') {
-            const lower = value.toLowerCase().trim();
-            return lower === 'true' || lower === 'yes' || lower === '1';
-        }
-        return false;
-    }
-
-    /**
-     * Parse tags from CSV (comma-separated values)
-     */
-    parseTags(tagsString) {
-        if (!tagsString) return [];
-        
-        return tagsString
-            .split(',')
-            .map(tag => tag.trim())
-            .filter(tag => tag.length > 0);
-    }
-
-    /**
-     * Generate a unique ID for an artwork
-     */
-    generateId(title) {
-        return title?.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'artwork-' + Date.now();
-    }
-
-    /**
-     * Generate image filename from ID and title with sample support
-     */
-    generateImageFilename(id, title, sampleNumber = 1) {
-        // First try to use ID as filename
-        if (id && typeof id === 'string') {
-            // For sample numbers > 1, add the sample suffix
-            if (sampleNumber > 1) {
-                return `${id}-${sampleNumber.toString().padStart(2, '0')}.jpg`;
-            }
-            // For first sample, try both formats: ABS-0012.jpg and ABS-0012-01.jpg
-            return `${id}.jpg`; // Primary filename
-        }
-        // Fallback to title
-        if (title && typeof title === 'string') {
-            const baseId = this.generateId(title);
-            if (sampleNumber > 1) {
-                return `${baseId}-${sampleNumber.toString().padStart(2, '0')}.jpg`;
-            }
-            return `${baseId}.jpg`;
-        }
-        // Final fallback
-        return 'artwork-default.jpg';
-    }
-
-    /**
-     * Discover all available image samples for an artwork
-     */
-    async discoverImageSamples(artwork) {
-        const samples = [];
-        const baseId = artwork.id;
-        
-        // Always add the primary image
-        const primaryFilename = this.generateImageFilename(baseId, artwork.title, 1);
-        const primaryUrl = `./artworks/${primaryFilename}`;
-        
-        // Test if primary image exists
-        try {
-            const response = await fetch(primaryUrl, { method: 'HEAD' });
-            if (response.ok) {
-                samples.push({
-                    filename: primaryFilename,
-                    url: primaryUrl,
-                    sampleNumber: 1,
-                    isPrimary: true
-                });
-            } else {
-                // Try the -01 format if the primary doesn't exist
-                const altFilename = this.generateImageFilename(baseId, artwork.title, 1).replace('.jpg', '-01.jpg');
-                const altUrl = `./artworks/${altFilename}`;
-                const altResponse = await fetch(altUrl, { method: 'HEAD' });
-                if (altResponse.ok) {
-                    samples.push({
-                        filename: altFilename,
-                        url: altUrl,
-                        sampleNumber: 1,
-                        isPrimary: true
-                    });
-                }
-            }
-        } catch (error) {
-            console.log(`Could not verify primary image for ${baseId}:`, error);
-        }
-        
-        // Look for additional samples (02, 03, etc.)
-        for (let i = 2; i <= 5; i++) { // Check up to 5 samples
-            const filename = this.generateImageFilename(baseId, artwork.title, i);
-            const url = `./artworks/${filename}`;
             
-            try {
-                const response = await fetch(url, { method: 'HEAD' });
-                if (response.ok) {
-                    samples.push({
-                        filename,
-                        url,
-                        sampleNumber: i,
-                        isPrimary: false
-                    });
+            result.push(row);
+        }
+        
+        return result;
+    }
+
+    /**
+     * Parse a single CSV line, handling quoted fields
+     */
+    parseCSVLine(line) {
+        const fields = [];
+        let currentField = '';
+        let inQuotes = false;
+        let i = 0;
+        
+        while (i < line.length) {
+            const char = line[i];
+            const nextChar = line[i + 1];
+            
+            if (char === '"' && !inQuotes) {
+                inQuotes = true;
+            } else if (char === '"' && inQuotes) {
+                if (nextChar === '"') {
+                    currentField += '"';
+                    i++; // Skip the next quote
                 } else {
-                    break; // Stop looking if we don't find a consecutive sample
+                    inQuotes = false;
                 }
-            } catch (error) {
-                break; // Stop on error
+            } else if (char === ',' && !inQuotes) {
+                fields.push(currentField);
+                currentField = '';
+            } else {
+                currentField += char;
             }
+            i++;
         }
         
-        return samples;
-    }
-
-    /**
-     * Extract price from pricing column
-     */
-    extractPrice(pricingText) {
-        if (!pricingText) return '';
+        // Add the last field
+        fields.push(currentField);
         
-        // Look for dollar amounts
-        const priceMatch = pricingText.match(/\$[\d,]+/);
-        if (priceMatch) {
-            return priceMatch[0];
-        }
-        
-        // Return as-is if no dollar sign found
-        return pricingText;
-    }
-
-    /**
-     * Generate tags from title and description
-     */
-    generateTags(title, description) {
-        const tags = [];
-        
-        // Extract meaningful words from title
-        if (title) {
-            const titleWords = title.toLowerCase()
-                .split(/\s+/)
-                .filter(word => word.length > 3 && !['the', 'and', 'for', 'with'].includes(word));
-            tags.push(...titleWords);
-        }
-        
-        // Extract key concepts from description
-        if (description) {
-            const keywords = ['spiritual', 'awakening', 'freedom', 'power', 'energy', 'movement', 'transition', 'patterns'];
-            keywords.forEach(keyword => {
-                if (description.toLowerCase().includes(keyword)) {
-                    tags.push(keyword);
-                }
-            });
-        }
-        
-        return [...new Set(tags)]; // Remove duplicates
-    }
-
-    /**
-     * Convert filename to a readable title
-     */
-    filenameToTitle(filename) {
-        return filename
-            .replace(/[-_]/g, ' ')
-            .replace(/\b\w/g, l => l.toUpperCase());
+        return fields;
     }
 
     /**
@@ -402,20 +287,25 @@ export class MetadataProcessor {
 
         // Organize artworks by collection
         this.artworks.forEach(artwork => {
-            const collectionId = this.normalizeCollectionName(artwork.collection);
+            const collectionId = artwork.collection; // Use collection ID directly (COLL-0001, etc.)
+            
+            console.log(`🎨 Processing artwork "${artwork.title}" with collection ID: ${collectionId}`);
             
             // Add to specific collection if it exists
-            if (this.collections.has(collectionId)) {
+            if (collectionId && this.collections.has(collectionId)) {
                 this.collections.get(collectionId).artworks.push(artwork);
-            } else {
-                // Create collection if it doesn't exist
-                console.log(`🆕 Creating new collection: ${artwork.collection} (${collectionId})`);
+                console.log(`✅ Added artwork "${artwork.title}" to collection ${collectionId} (${this.collections.get(collectionId).name})`);
+            } else if (collectionId) {
+                // Create collection if it doesn't exist (fallback)
+                console.log(`🆕 Creating new collection for unknown ID: ${collectionId}`);
                 this.collections.set(collectionId, {
                     id: collectionId,
-                    name: artwork.collection || 'Untitled Collection',
-                    description: `Collection of works in ${artwork.collection}`,
+                    name: collectionId, // This is the fallback that's causing the issue
+                    description: `Collection ${collectionId}`,
                     artworks: [artwork]
                 });
+            } else {
+                console.log(`⚠️ Artwork "${artwork.title}" has no collection ID`);
             }
             
             // Always add to 'all' collection if it exists
@@ -449,15 +339,14 @@ export class MetadataProcessor {
         });
         collectionsToRemove.forEach(id => this.collections.delete(id));
 
-        // Sort main artworks array
-        this.artworks.sort((a, b) => {
-            if (a.order && b.order) {
-                return parseInt(a.order) - parseInt(b.order);
-            }
-            return (a.title || '').localeCompare(b.title || '');
-        });
-
         console.log(`✅ Organized ${this.artworks.length} artworks into ${this.collections.size} collections`);
+        this.collections.forEach((collection, id) => {
+            console.log(`  📁 ${id}: "${collection.name}" (${collection.artworks.length} artworks)`);
+            console.log(`     Description: ${collection.description ? collection.description.substring(0, 100) + '...' : 'No description'}`);
+            if (collection.artworks.length > 0) {
+                console.log(`     Sample artwork: "${collection.artworks[0].title}"`);
+            }
+        });
     }
 
     /**
@@ -501,7 +390,7 @@ export class MetadataProcessor {
     }
 
     /**
-     * Get all collection names
+     * Get collection names for navigation
      */
     getCollectionNames() {
         return Array.from(this.collections.keys());
@@ -511,7 +400,7 @@ export class MetadataProcessor {
      * Get featured artworks
      */
     getFeaturedArtworks() {
-        return this.artworks.filter(artwork => artwork.featured === 'true' || artwork.featured === true);
+        return this.artworks.filter(artwork => artwork.featured);
     }
 
     /**
@@ -522,21 +411,14 @@ export class MetadataProcessor {
     }
 
     /**
-     * Search artworks by title, description, or tags
+     * Search artworks by query
      */
     searchArtworks(query) {
-        const searchTerm = query.toLowerCase();
-        
-        return this.artworks.filter(artwork => {
-            const searchableText = [
-                artwork.title,
-                artwork.description,
-                artwork.medium,
-                artwork.collection,
-                ...(artwork.tags || [])
-            ].join(' ').toLowerCase();
-            
-            return searchableText.includes(searchTerm);
-        });
+        const lowercaseQuery = query.toLowerCase();
+        return this.artworks.filter(artwork => 
+            artwork.title.toLowerCase().includes(lowercaseQuery) ||
+            artwork.description.toLowerCase().includes(lowercaseQuery) ||
+            artwork.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery))
+        );
     }
 }

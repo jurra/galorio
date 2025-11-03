@@ -13,7 +13,35 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.dirname(__dirname);
 
+// Load Build Configuration
+function loadBuildConfig() {
+    const configPath = path.join(projectRoot, 'build.config.json');
+    if (fs.existsSync(configPath)) {
+        try {
+            const configText = fs.readFileSync(configPath, 'utf8');
+            const config = JSON.parse(configText);
+            return {
+                COLLECTION_ORDER: config.collectionOrder || 'alphabetical',
+                ARTWORK_ORDER: config.artworkOrder || 'alphabetical'
+            };
+        } catch (error) {
+            console.log('⚠️ Error reading build config, using defaults:', error.message);
+        }
+    }
+    
+    // Default configuration
+    return {
+        COLLECTION_ORDER: 'csv_order',
+        ARTWORK_ORDER: 'csv_order'
+    };
+}
+
+const BUILD_CONFIG = loadBuildConfig();
+
 console.log('🎨 Building Art Portfolio Static...\n');
+console.log(`📋 Configuration:
+   - Collection Order: ${BUILD_CONFIG.COLLECTION_ORDER}
+   - Artwork Order: ${BUILD_CONFIG.ARTWORK_ORDER}\n`);
 
 /**
  * Parse CSV file with proper handling of quoted fields and multiline content
@@ -116,7 +144,17 @@ function loadCSVConfig() {
             const csvText = fs.readFileSync(csvPath, 'utf8');
             return parseCSV(csvText);
         } catch (error2) {
-            console.log('⚠️  No CSV configuration found, using default order');
+            console.log('❌ No artwork CSV files found!');
+            console.log('📋 Required files:');
+            console.log('   - config/artwork-inventory.csv (primary)');
+            console.log('   - OR config/collections.csv (fallback)');
+            console.log('');
+            console.log('💡 Example files available:');
+            console.log('   - config/artwork-inventory.example.csv');
+            console.log('   - config/collections.example.csv');
+            console.log('');
+            console.log('🔧 Copy an example file to get started:');
+            console.log('   cp config/artwork-inventory.example.csv config/artwork-inventory.csv');
             return null;
         }
     }
@@ -268,9 +306,100 @@ function generateTags(title, description) {
 }
 
 /**
+ * Shuffle array randomly using Fisher-Yates algorithm
+ */
+function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
+/**
+ * Sort collections based on the configured order
+ */
+function sortCollections(collectionsArray, csvRowOrder = new Map()) {
+    switch (BUILD_CONFIG.COLLECTION_ORDER) {
+        case 'alphabetical':
+            return collectionsArray.sort((a, b) => a.name.localeCompare(b.name));
+        
+        case 'csv_order':
+            return collectionsArray.sort((a, b) => {
+                const orderA = csvRowOrder.get(a.id) || 999;
+                const orderB = csvRowOrder.get(b.id) || 999;
+                return orderA - orderB;
+            });
+        
+        case 'random':
+            return shuffleArray(collectionsArray);
+        
+        default:
+            console.log(`⚠️ Unknown collection order: ${BUILD_CONFIG.COLLECTION_ORDER}, using alphabetical`);
+            return collectionsArray.sort((a, b) => a.name.localeCompare(b.name));
+    }
+}
+
+/**
+ * Sort artworks within a collection based on the configured order
+ */
+function sortArtworks(artworksArray, csvRowOrder = new Map()) {
+    switch (BUILD_CONFIG.ARTWORK_ORDER) {
+        case 'alphabetical':
+            return artworksArray.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+        
+        case 'csv_order':
+            return artworksArray.sort((a, b) => {
+                const orderA = csvRowOrder.get(a.id) || 999;
+                const orderB = csvRowOrder.get(b.id) || 999;
+                return orderA - orderB;
+            });
+        
+        case 'random':
+            return shuffleArray(artworksArray);
+        
+        default:
+            console.log(`⚠️ Unknown artwork order: ${BUILD_CONFIG.ARTWORK_ORDER}, using alphabetical`);
+            return artworksArray.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    }
+}
+
+/**
+ * Load collections metadata from collections.csv
+ */
+function loadCollectionsMetadata() {
+    try {
+        const collectionsPath = path.join(projectRoot, 'config', 'collections.csv');
+        if (!fs.existsSync(collectionsPath)) {
+            console.log('❌ Collections CSV not found: config/collections.csv');
+            console.log('💡 Copy example file to get started:');
+            console.log('   cp config/collections.example.csv config/collections.csv');
+            return [];
+        }
+        
+        const csvText = fs.readFileSync(collectionsPath, 'utf8');
+        const collectionsData = parseCSV(csvText);
+        
+        console.log(`📚 Loaded ${collectionsData.length} collections from CSV`);
+        
+        return collectionsData.map(row => ({
+            id: row.ID,
+            name: row.Title || row.ID,
+            description: row.Description || '',
+            notes: row.Notes || ''
+        })).filter(collection => collection.id); // Only include rows with valid IDs
+        
+    } catch (error) {
+        console.error('❌ Error loading collections metadata:', error);
+        return [];
+    }
+}
+
+/**
  * Build portfolio data
  */
-function buildPortfolio() {
+async function buildPortfolio() {
     console.log('� Loading CSV configuration...');
     const csvConfig = loadCSVConfig();
     
@@ -292,8 +421,9 @@ function buildPortfolio() {
     
     console.log('🖼️  Processing artwork metadata from CSV...');
     const artworks = [];
+    const csvRowOrder = new Map(); // Track original CSV order
     
-    csvConfig.forEach(row => {
+    csvConfig.forEach((row, index) => {
         if (row.Title) { // Check for Title instead of filename
             console.log(`  Processing: ${row.Title}`);
             
@@ -325,39 +455,77 @@ function buildPortfolio() {
                 tags: generateTags(row.Title, row['Extended description'])
             };
             
+            // Track CSV row order for both artwork and collection
+            csvRowOrder.set(artwork.id, index);
+            if (row.Collection) {
+                csvRowOrder.set(row.Collection, index);
+            }
+            
             artworks.push(artwork);
         }
     });
     
-    // Sort artworks by order if specified, otherwise by title
-    artworks.sort((a, b) => {
-        if (a.order && b.order) {
-            return parseInt(a.order) - parseInt(b.order);
-        }
-        return (a.title || '').localeCompare(b.title || '');
+    // Apply configured sorting to artworks
+    console.log(`🔧 Applying ${BUILD_CONFIG.ARTWORK_ORDER} sorting to artworks...`);
+    const sortedArtworks = sortArtworks(artworks, csvRowOrder);
+    
+    console.log(`✅ Processed ${sortedArtworks.length} artworks from CSV`);
+    
+    // Load collections metadata
+    const collectionsData = await loadCollectionsMetadata();
+    
+    // Generate collections with nested artworks
+    const collections = new Map();
+    
+    // Initialize collections from collections.csv
+    collectionsData.forEach(collectionInfo => {
+        collections.set(collectionInfo.id, {
+            id: collectionInfo.id,
+            name: collectionInfo.name,
+            description: collectionInfo.description || '',
+            notes: collectionInfo.notes || '',
+            artworks: []
+        });
     });
     
-    console.log(`✅ Processed ${artworks.length} artworks from CSV`);
-    
-    // Generate collections info
-    const collections = {};
-    artworks.forEach(artwork => {
-        const collection = artwork.collection || 'All';
-        if (!collections[collection]) {
-            collections[collection] = [];
+    // Add artworks to their respective collections
+    sortedArtworks.forEach(artwork => {
+        const collectionId = artwork.collection;
+        if (collectionId && collections.has(collectionId)) {
+            collections.get(collectionId).artworks.push(artwork);
+        } else if (collectionId) {
+            // Create collection if it doesn't exist in collections.csv
+            collections.set(collectionId, {
+                id: collectionId,
+                name: collectionId,
+                description: `Collection ${collectionId}`,
+                notes: '',
+                artworks: [artwork]
+            });
         }
-        collections[collection].push(artwork.id);
+    });
+    
+    // Convert Map to Array for sorting, then back to Object for JSON serialization
+    const collectionsArray = Array.from(collections.values()).filter(collection => collection.artworks.length > 0);
+    
+    // Apply configured sorting to collections
+    console.log(`🔧 Applying ${BUILD_CONFIG.COLLECTION_ORDER} sorting to collections...`);
+    const sortedCollections = sortCollections(collectionsArray, csvRowOrder);
+    
+    // Convert sorted array back to object, preserving order
+    const collectionsObj = {};
+    sortedCollections.forEach(collection => {
+        collectionsObj[collection.id] = collection;
     });
     
     const portfolioData = {
-        artworks,
-        collections,
+        collections: collectionsObj,
         meta: {
             generatedAt: new Date().toISOString(),
-            totalArtworks: artworks.length,
-            collectionsCount: Object.keys(collections).length,
-            featuredCount: artworks.filter(a => a.featured === true).length,
-            missingImages: artworks.filter(a => a.missingImage).length
+            totalArtworks: sortedArtworks.length,
+            collectionsCount: Object.keys(collectionsObj).length,
+            featuredCount: sortedArtworks.filter(a => a.featured === true).length,
+            missingImages: sortedArtworks.filter(a => a.missingImage).length
         }
     };
     
@@ -404,7 +572,15 @@ function generateSitemap(portfolioData) {
     <priority>1.0</priority>
   </url>`;
     
-    portfolioData.artworks.forEach(artwork => {
+    // Extract all artworks from collections
+    const allArtworks = [];
+    Object.values(portfolioData.collections).forEach(collection => {
+        if (collection.artworks) {
+            allArtworks.push(...collection.artworks);
+        }
+    });
+    
+    allArtworks.forEach(artwork => {
         sitemap += `
   <url>
     <loc>${baseUrl}/artwork.html?id=${artwork.id}</loc>
@@ -424,9 +600,9 @@ function generateSitemap(portfolioData) {
 /**
  * Main build function
  */
-function main() {
+async function main() {
     try {
-        const portfolioData = buildPortfolio();
+        const portfolioData = await buildPortfolio();
         writePortfolioData(portfolioData);
         generateSitemap(portfolioData);
         

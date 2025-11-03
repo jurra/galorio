@@ -1,0 +1,8 @@
+{
+  "collectionOrder": "csv_order",
+  "artworkOrder": "csv_order",
+  "description": {
+    "collectionOrder": "Options: 'alphabetical', 'csv_order', 'random'",
+    "artworkOrder": "Options: 'alphabetical', 'csv_order', 'random'"
+  }
+}

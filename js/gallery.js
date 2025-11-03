@@ -233,7 +233,19 @@ export class Gallery {
         
         const title = document.createElement('h1');
         title.className = 'single-collection-title';
-        title.textContent = collection.name;
+        
+        // Create "Collection:" prefix in bold
+        const collectionLabel = document.createElement('strong');
+        collectionLabel.textContent = 'Collection: ';
+        
+        // Create collection name in italic
+        const collectionName = document.createElement('em');
+        collectionName.textContent = collection.name;
+        
+        // Append both to the title
+        title.appendChild(collectionLabel);
+        title.appendChild(collectionName);
+        
         header.appendChild(title);
 
         if (collection.description) {
@@ -389,7 +401,19 @@ export class Gallery {
         
         const title = document.createElement('h2');
         title.className = 'collection-title';
-        title.textContent = collection.name;
+        
+        // Create "Collection:" prefix in bold
+        const collectionLabel = document.createElement('strong');
+        collectionLabel.textContent = 'Collection: ';
+        
+        // Create collection name in italic
+        const collectionName = document.createElement('em');
+        collectionName.textContent = collection.name;
+        
+        // Append both to the title
+        title.appendChild(collectionLabel);
+        title.appendChild(collectionName);
+        
         headerInfo.appendChild(title);
 
         if (collection.description) {
