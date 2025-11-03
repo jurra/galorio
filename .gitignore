@@ -1,18 +1,24 @@
-# Large artwork images (production) - only in source
-artworks/*.jpg
-artworks/*.jpeg
-artworks/*.png
-artworks/*.gif
-artworks/*.webp
-artworks/*.tiff
-artworks/*.bmp
+# Original high-resolution artwork stored separately (backup)
+artworks-originals/
+artworks-web-backup/
 
 # Keep small placeholder/sample images for development
 !artworks/*-placeholder.*
 !artworks/*-sample.*
-!artworks/profile.jpg
 
 # Keep documentation and config files
+!artworks/README.md
+!artworks/*.svg
+
+# All artwork images in artworks/ are now tracked by Git LFS
+!artworks/thumbnails/*.jpeg
+!artworks/thumbnails/*.png
+!artworks/thumbnails/*.webp
+
+# Keep small files and documentation
+!artworks/*-placeholder.*
+!artworks/*-sample.*
+!artworks/profile.jpg
 !artworks/README.md
 !artworks/*.svg
 

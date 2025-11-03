@@ -1,0 +1,5 @@
+# Git LFS Configuration
+# Track all artwork images with LFS
+artworks/*.jpg filter=lfs diff=lfs merge=lfs -text
+artworks/*.png filter=lfs diff=lfs merge=lfs -text
+artworks/*.jpeg filter=lfs diff=lfs merge=lfs -text
