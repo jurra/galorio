@@ -121,14 +121,67 @@ a:hover {
 /* Navigation */
 .nav {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+/* Mobile Menu Toggle */
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
     justify-content: center;
     align-items: center;
+    gap: 0.3rem;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
+
+.nav-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-toggle:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+.hamburger-line {
+    width: 1.5rem;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+    transform-origin: center;
+}
+
+.nav-toggle:hover .hamburger-line {
+    background: white;
+}
+
+/* Hamburger animation when active */
+.nav-toggle.active .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(0.4rem, 0.4rem);
+}
+
+.nav-toggle.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-toggle.active .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(0.4rem, -0.4rem);
 }
 
 .nav-menu {
     display: flex;
     align-items: center;
     gap: 0;
+    margin: 0 auto;
 }
 
 .nav-item {
@@ -549,6 +602,72 @@ p, span, div {
 @media (max-width: 768px) {
     .container {
         padding: 0 16px;
+    }
+    
+    /* Mobile Navigation */
+    .nav-toggle {
+        display: flex;
+    }
+    
+    .nav-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #2a2a2a;
+        flex-direction: column;
+        padding: 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        margin: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        z-index: 999;
+    }
+    
+    .nav-menu.active {
+        display: flex;
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .nav-item {
+        padding: 1rem 2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        text-align: center;
+        width: 100%;
+        box-sizing: border-box;
+        transition: all 0.2s ease;
+        transform: translateX(-20px);
+        opacity: 0;
+        animation: slideIn 0.3s ease forwards;
+    }
+    
+    .nav-menu.active .nav-item:nth-child(1) { animation-delay: 0.1s; }
+    .nav-menu.active .nav-item:nth-child(2) { animation-delay: 0.15s; }
+    .nav-menu.active .nav-item:nth-child(3) { animation-delay: 0.2s; }
+    .nav-menu.active .nav-item:nth-child(4) { animation-delay: 0.25s; }
+    
+    @keyframes slideIn {
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .nav-item:not(:last-child)::after {
+        display: none;
+    }
+    
+    .nav-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(5px);
+    }
+    
+    .nav-item:last-child {
+        border-bottom: none;
     }
     
     .artist-card {

@@ -33,12 +33,19 @@
     <!-- Header -->
     <header class="header">
         <div class="container">
-            <nav class="nav">
-                <div class="nav-menu">
-                    <a href="#home" class="nav-item active">Home</a>
-                    <a href="#collections" class="nav-item">Collections</a>
-                    <a href="#about" class="nav-item">About</a>
-                    <a href="#contact" class="nav-item">Contact</a>
+            <nav class="nav" role="navigation" aria-label="Main navigation">
+                <!-- Mobile Menu Toggle -->
+                <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-menu">
+                    <span class="hamburger-line" aria-hidden="true"></span>
+                    <span class="hamburger-line" aria-hidden="true"></span>
+                    <span class="hamburger-line" aria-hidden="true"></span>
+                </button>
+                
+                <div class="nav-menu" id="nav-menu" role="menu">
+                    <a href="#home" class="nav-item active" role="menuitem">Home</a>
+                    <a href="#collections" class="nav-item" role="menuitem">Collections</a>
+                    <a href="#about" class="nav-item" role="menuitem">About</a>
+                    <a href="#contact" class="nav-item" role="menuitem">Contact</a>
                 </div>
             </nav>
         </div>

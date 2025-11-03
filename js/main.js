@@ -11,6 +11,66 @@ let metadataProcessor;
 let gallery;
 
 /**
+ * Initialize mobile navigation functionality
+ */
+function initMobileNavigation() {
+    const navToggle = document.querySelector('.nav-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    const navItems = document.querySelectorAll('.nav-item');
+    
+    if (!navToggle || !navMenu) {
+        console.log('Mobile navigation elements not found');
+        return;
+    }
+    
+    // Toggle mobile menu
+    navToggle.addEventListener('click', () => {
+        const isActive = navToggle.classList.contains('active');
+        
+        if (isActive) {
+            // Close menu
+            navToggle.classList.remove('active');
+            navMenu.classList.remove('active');
+            navToggle.setAttribute('aria-expanded', 'false');
+        } else {
+            // Open menu
+            navToggle.classList.add('active');
+            navMenu.classList.add('active');
+            navToggle.setAttribute('aria-expanded', 'true');
+        }
+    });
+    
+    // Close menu when clicking on nav items
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            navToggle.classList.remove('active');
+            navMenu.classList.remove('active');
+            navToggle.setAttribute('aria-expanded', 'false');
+        });
+    });
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
+            navToggle.classList.remove('active');
+            navMenu.classList.remove('active');
+            navToggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+    
+    // Close menu on window resize to larger screen
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            navToggle.classList.remove('active');
+            navMenu.classList.remove('active');
+            navToggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+    
+    console.log('✅ Mobile navigation initialized');
+}
+
+/**
  * Log complete rendering state for debugging
  */
 function logRenderingState() {
@@ -208,6 +268,9 @@ if (document.body) {
 // Initialize the application when the DOM is loaded
 document.addEventListener('DOMContentLoaded', async function() {
     try {
+        // Initialize mobile navigation
+        initMobileNavigation();
+        
         // Initialize metadata processor
         metadataProcessor = new MetadataProcessor();
         
