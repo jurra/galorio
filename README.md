@@ -128,4 +128,4 @@ The portfolio automatically adapts to different screen sizes:
 
 ## License
 
-MIT License - feel free to use for your own art portfolio!
+MIT License - feel free to use for your own art portfolio!# Art Portfolio - Live at GitHub Pages
